@@ -946,6 +946,30 @@ ArangoDatabase.prototype._query = function (query, bindVars, cursorOptions, opti
 };
 
 // //////////////////////////////////////////////////////////////////////////////
+// / @brief factory method to create and execute a new statement
+// //////////////////////////////////////////////////////////////////////////////
+
+ArangoDatabase.prototype._sqlquery = function (query, bindVars, cursorOptions, options) {
+    if (typeof query === 'object' && query !== null && arguments.length === 1) {
+        return new ArangoStatement(this, "-SQL-" + query + "-SQL-").execute();
+    }
+    if (options === undefined && cursorOptions !== undefined) {
+        options = cursorOptions;
+    }
+
+    var data = {
+        query: "-SQL-" + query + "-SQL-",
+        bindVars: bindVars || undefined,
+        count: (cursorOptions && cursorOptions.count) || false,
+        batchSize: (cursorOptions && cursorOptions.batchSize) || undefined,
+        options: options || undefined,
+        cache: (options && options.cache) || undefined
+    };
+
+    return new ArangoStatement(this, data).execute();
+};
+
+// //////////////////////////////////////////////////////////////////////////////
 // / @brief queryProfile execute a query with profiling information
 // //////////////////////////////////////////////////////////////////////////////
 

@@ -577,7 +577,7 @@ if (CMAKE_COMPILER_IS_CLANG)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.3")
       message(FATAL_ERROR "ArangoDB requires clang 3.3 or newer.")
     endif()
-    list(APPEND BASE_LIBS atomic)
+    #list(APPEND BASE_LIBS atomic)
   endif ()
 endif ()
 
