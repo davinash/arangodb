@@ -148,8 +148,6 @@ void Tokenize(const std::string &str,
 RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
     TRI_ASSERT(_query == nullptr);
 
-    LOG_TOPIC(INFO, Logger::AQL) << "VPackSlice ==> " << slice.toString();
-
     if (!slice.isObject()) {
         generateError(rest::ResponseCode::BAD, TRI_ERROR_QUERY_EMPTY);
         return RestStatus::DONE;
@@ -171,7 +169,6 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
 
     std::shared_ptr<VPackBuilder> bindVarsBuilder;
     if (!bindVars.isNone()) {
-        LOG_TOPIC(INFO, Logger::AQL) << "bindVars is available";
         bindVarsBuilder.reset(new VPackBuilder);
         bindVarsBuilder->add(bindVars);
     }
@@ -212,11 +209,8 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
     std::vector<std::string> queryTokens;
     Tokenize(queryStr, queryTokens, "#");
     if (queryTokens.size() == 2) {
-        LOG_TOPIC(INFO, Logger::AQL) << "Query Received is SQL";
         std::string translatedAQLQuery(hsql::SQLStatementToAQL::convert(queryTokens.at(0)).c_str());
-        //const char* translatedAQLQuery = "FOR ROW IN commits RETURN { author : ROW.author  }";
         LOG_TOPIC(INFO, Logger::AQL) << "Corresponding AQL Query = " << "[" << translatedAQLQuery << "]";
-        //l = strlen(translatedAQLQuery) ;
 
         auto query = std::make_unique<aql::Query>(
                 false,
