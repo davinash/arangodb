@@ -951,14 +951,14 @@ ArangoDatabase.prototype._query = function (query, bindVars, cursorOptions, opti
 
 ArangoDatabase.prototype._sqlquery = function (query, bindVars, cursorOptions, options) {
     if (typeof query === 'object' && query !== null && arguments.length === 1) {
-        return new ArangoStatement(this, "-SQL-" + query + "-SQL-").execute();
+        return new ArangoStatement(this, "#" + query + "#").execute();
     }
     if (options === undefined && cursorOptions !== undefined) {
         options = cursorOptions;
     }
 
     var data = {
-        query: "-SQL-" + query + "-SQL-",
+        query: "#" + query + "#",
         bindVars: bindVars || undefined,
         count: (cursorOptions && cursorOptions.count) || false,
         batchSize: (cursorOptions && cursorOptions.batchSize) || undefined,
