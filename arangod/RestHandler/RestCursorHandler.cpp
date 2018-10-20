@@ -41,8 +41,8 @@
 #include <velocypack/Value.h>
 #include <velocypack/velocypack-aliases.h>
 
-#include <aql/SQLStatementToAQL.h>
 #include <3rdParty/sql-parser/1.0.0/src/aql/SQLStatementToAQL.h>
+#include <3rdParty/catch/catch.hpp>
 
 
 using namespace arangodb;
@@ -204,21 +204,18 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
     char const *queryStr = querySlice.getString(l);
     TRI_ASSERT(l > 0);
 
-    // Hack to handle the SQL Queries
-
-    std::cout << "AQL --> " << "[" << queryStr << "]" << std::endl;
+    // Hack to handle the SQL Queries START HERE
     std::vector<std::string> queryTokens;
     Tokenize(queryStr, queryTokens, "--SQL--");
-
-
     if (queryTokens.size() == 2 ) {
+        LOG_TOPIC(INFO, Logger::AQL) << "Query Received is SQL";
         std::string sqlQuery = queryTokens.at(0);
-        std::cout << "SQL QUERY -> " << sqlQuery << std::endl;
+        LOG_TOPIC(INFO, Logger::AQL) << "SQL QUERY = " << sqlQuery;
         queryStr = hsql::SQLStatementToAQL::convert(sqlQuery).c_str();
+        LOG_TOPIC(INFO, Logger::AQL) << "Corresponding AQL Query = " << queryStr;
         l = strlen(queryStr);
     }
-
-    std::cout << "Final AQL Query -> " << queryStr << std::endl;
+    // Hack to handle the SQL Queries ENDS HERE
 
     auto query = std::make_unique<aql::Query>(
             false,
@@ -246,7 +243,6 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
 //////////////////////////////////////////////////////////////////////////////
 
 RestStatus RestCursorHandler::processQuery() {
-    std::cout << " Avinash Here " << std::endl;
     if (_query == nullptr) {
         THROW_ARANGO_EXCEPTION_MESSAGE(TRI_ERROR_INTERNAL, "Illegal state in RestQueryHandler, query not found.");
     }
