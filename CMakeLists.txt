@@ -1045,6 +1045,7 @@ include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rdParty/rocksdb/${ARANGO_ROCKS
 include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rdParty/s2geometry/${ARANGO_S2GEOMETRY_VERSION}/src)
 include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rdParty/rocksdb/${ARANGO_ROCKSDB_VERSION})
 include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rdParty/date/include)
+include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rdParty/sql-parser/1.0.0/src)
 
 # ------------------------------------------------------------------------------
 # RocksDB
@@ -1055,7 +1056,9 @@ include_directories(${ROCKSDB_INCLUDE_DIR})
 
 set(ROCKSDB_LIBS rocksdb;${SNAPPY_LIB})
 
-add_dependencies(rocksdb ${SNAPPY_LIB})
+set(SQL_PARSER_LIBS sql-parser)
+
+add_dependencies(rocksdb ${SNAPPY_LIB} sql-parser)
 
 if (USE_JEMALLOC)
   add_dependencies(rocksdb jemalloc)

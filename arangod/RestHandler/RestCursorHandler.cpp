@@ -41,6 +41,10 @@
 #include <velocypack/Value.h>
 #include <velocypack/velocypack-aliases.h>
 
+#include <aql/SQLStatementToAQL.h>
+#include <3rdParty/sql-parser/1.0.0/src/aql/SQLStatementToAQL.h>
+
+
 using namespace arangodb;
 using namespace arangodb::basics;
 using namespace arangodb::rest;
@@ -206,10 +210,15 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
     std::vector<std::string> queryTokens;
     Tokenize(queryStr, queryTokens, "--SQL--");
 
-    if (queryTokens.size() != 0) {
+
+    if (queryTokens.size() == 2 ) {
         std::string sqlQuery = queryTokens.at(0);
         std::cout << "SQL QUERY -> " << sqlQuery << std::endl;
+        queryStr = hsql::SQLStatementToAQL::convert(sqlQuery).c_str();
+        l = strlen(queryStr);
     }
+
+    std::cout << "Final AQL Query -> " << queryStr << std::endl;
 
     auto query = std::make_unique<aql::Query>(
             false,

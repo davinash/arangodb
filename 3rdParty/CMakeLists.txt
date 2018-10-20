@@ -285,7 +285,7 @@ set(ARANGO_ROCKSDB_VERSION "${ARANGO_ROCKSDB_VERSION}" PARENT_SCOPE)
 
 set(SQL_PARSER_VERSION "1.0.0")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sql-parser/${SQL_PARSER_VERSION})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sql-parser/${SQL_PARSER_VERSION})
+include_directories(SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/sql-parser/${SQL_PARSER_VERSION}/src")
 
 ################################################################################
 ## ASIO

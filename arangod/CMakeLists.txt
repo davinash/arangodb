@@ -578,6 +578,7 @@ target_link_libraries(arangoserver
   ${MSVC_LIBS}
   ${V8_LIBS}
   ${ROCKSDB_LIBS}
+  ${SQL_PARSER_LIBS}
   ${LIB_ARANGO_IRESEARCH}
   s2
   boost_boost
@@ -597,6 +598,7 @@ if (USE_ENTERPRISE)
       ldap
       lber
       ${OPENSSL_LIBRARIES}
+      ${SQL_PARSER_LIBS}
     )
   endif()
 endif()
@@ -607,6 +609,7 @@ add_executable(${BIN_ARANGOD}
 
 target_link_libraries(${BIN_ARANGOD}
   arangoserver
+  ${SQL_PARSER_LIBS}
 )
 
 target_compile_features(${BIN_ARANGOD} PRIVATE cxx_constexpr)
