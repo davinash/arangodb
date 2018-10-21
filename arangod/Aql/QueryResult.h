@@ -27,55 +27,54 @@
 #include "Basics/Common.h"
 
 namespace arangodb {
-    namespace velocypack {
-        class Builder;
-    }
+namespace velocypack {
+class Builder;
+}
 
-    namespace transaction {
-        class Context;
-    }
+namespace transaction {
+class Context;
+}
 
-    namespace aql {
+namespace aql {
 
-        struct QueryResult {
-            QueryResult &operator=(QueryResult const &other) = delete;
+struct QueryResult {
+  QueryResult& operator=(QueryResult const& other) = delete;
+  QueryResult(QueryResult&& other) = default;
 
-            QueryResult(QueryResult &&other) = default;
+  QueryResult(int code, std::string const& details)
+      : code(code),
+        cached(false),
+        details(details),
+        result(nullptr),
+        extra(nullptr),
+        context(nullptr) {}
 
-            QueryResult(int code, std::string const &details)
-                    : code(code),
-                      cached(false),
-                      details(details),
-                      result(nullptr),
-                      extra(nullptr),
-                      context(nullptr) {}
+  explicit QueryResult(int code) : QueryResult(code, "") {}
 
-            explicit QueryResult(int code) : QueryResult(code, "") {}
+  QueryResult() : QueryResult(TRI_ERROR_NO_ERROR) {}
 
-            QueryResult() : QueryResult(TRI_ERROR_NO_ERROR) {}
+  virtual ~QueryResult() {}
 
-            virtual ~QueryResult() {}
+  void set(int c, std::string const& d) {
+    code = c;
+    cached = false;
+    details = d;
+    result.reset();
+    extra.reset();
+    context.reset();
+  }
 
-            void set(int c, std::string const &d) {
-                code = c;
-                cached = false;
-                details = d;
-                result.reset();
-                extra.reset();
-                context.reset();
-            }
-
-        public:
-            int code;
-            bool cached;
-            std::string details;
-            std::unordered_set<std::string> bindParameters;
-            std::vector<std::string> collectionNames;
-            std::shared_ptr<arangodb::velocypack::Builder> result;
-            std::shared_ptr<arangodb::velocypack::Builder> extra;
-            std::shared_ptr<transaction::Context> context;
-        };
-    }
+ public:
+  int code;
+  bool cached;
+  std::string details;
+  std::unordered_set<std::string> bindParameters;
+  std::vector<std::string> collectionNames;
+  std::shared_ptr<arangodb::velocypack::Builder> result;
+  std::shared_ptr<arangodb::velocypack::Builder> extra;
+  std::shared_ptr<transaction::Context> context;
+};
+}
 }
 
 #endif

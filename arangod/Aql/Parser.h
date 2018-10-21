@@ -29,149 +29,147 @@
 #include "Aql/Query.h"
 
 namespace arangodb {
-    namespace aql {
-        struct AstNode;
-
-        class Query;
-
-        struct QueryResult;
+namespace aql {
+struct AstNode;
+class Query;
+struct QueryResult;
 
 /// @brief the parser
-        class Parser {
-        public:
-            /// @brief create the parser
-            explicit Parser(Query *);
+class Parser {
+ public:
+  /// @brief create the parser
+  explicit Parser(Query*);
 
-            /// @brief destroy the parser
-            ~Parser();
+  /// @brief destroy the parser
+  ~Parser();
 
-        public:
-            /// @brief return the ast during parsing
-            inline Ast *ast() { return _ast; }
+ public:
+  /// @brief return the ast during parsing
+  inline Ast* ast() { return _ast; }
 
-            /// @brief return the query during parsing
-            inline Query *query() { return _query; }
+  /// @brief return the query during parsing
+  inline Query* query() { return _query; }
 
-            /// @brief return the scanner
-            inline void *scanner() const { return _scanner; }
+  /// @brief return the scanner
+  inline void* scanner() const { return _scanner; }
 
-            /// @brief a pointer to the start of the query string
-            char const *queryStringStart() const { return _queryStringStart; }
+  /// @brief a pointer to the start of the query string
+  char const* queryStringStart() const { return _queryStringStart; }
 
-            /// @brief return the remaining length of the query string to process
-            inline size_t remainingLength() const { return _remainingLength; }
+  /// @brief return the remaining length of the query string to process
+  inline size_t remainingLength() const { return _remainingLength; }
 
-            /// @brief return the current marker position
-            inline char const *marker() const { return _marker; }
+  /// @brief return the current marker position
+  inline char const* marker() const { return _marker; }
 
-            /// @brief set the current marker position
-            inline void marker(char const *marker) { _marker = marker; }
+  /// @brief set the current marker position
+  inline void marker(char const* marker) { _marker = marker; }
 
-            /// @brief return the current parse position
-            inline size_t offset() const { return _offset; }
+  /// @brief return the current parse position
+  inline size_t offset() const { return _offset; }
 
-            /// @brief adjust the current parse position
-            inline void increaseOffset(int offset) {
-                _offset += static_cast<size_t>(offset);
-            }
+  /// @brief adjust the current parse position
+  inline void increaseOffset(int offset) {
+    _offset += static_cast<size_t>(offset);
+  }
 
-            /// @brief adjust the current parse position
-            inline void increaseOffset(size_t offset) { _offset += offset; }
+  /// @brief adjust the current parse position
+  inline void increaseOffset(size_t offset) { _offset += offset; }
 
-            inline void decreaseOffset(int offset) {
-                _offset -= static_cast<size_t>(offset);
-            }
+  inline void decreaseOffset(int offset) {
+    _offset -= static_cast<size_t>(offset);
+  }
 
-            /// @brief adjust the current parse position
-            inline void decreaseOffset(size_t offset) { _offset -= offset; }
+  /// @brief adjust the current parse position
+  inline void decreaseOffset(size_t offset) { _offset -= offset; }
 
-            /// @brief fill the output buffer with a fragment of the query
-            void fillBuffer(char *result, size_t length) {
-                memcpy(result, _buffer, length);
-                _buffer += length;
-                _remainingLength -= length;
-            }
+  /// @brief fill the output buffer with a fragment of the query
+  void fillBuffer(char* result, size_t length) {
+    memcpy(result, _buffer, length);
+    _buffer += length;
+    _remainingLength -= length;
+  }
 
-            /// @brief set data for write queries
-            bool configureWriteQuery(AstNode const *, AstNode *optionNode);
+  /// @brief set data for write queries
+  bool configureWriteQuery(AstNode const*, AstNode* optionNode);
 
-            /// @brief parse the query
-            QueryResult parse(bool);
+  /// @brief parse the query
+  QueryResult parse(bool);
 
-            /// @brief register a parse error, position is specified as line / column
-            void registerParseError(int, char const *, char const *, int, int);
+  /// @brief register a parse error, position is specified as line / column
+  void registerParseError(int, char const*, char const*, int, int);
 
-            /// @brief register a parse error, position is specified as line / column
-            void registerParseError(int, char const *, int, int);
+  /// @brief register a parse error, position is specified as line / column
+  void registerParseError(int, char const*, int, int);
 
-            /// @brief register a non-parse error
-            void registerError(int, char const * = nullptr);
+  /// @brief register a non-parse error
+  void registerError(int, char const* = nullptr);
 
-            /// @brief register a warning
-            void registerWarning(int, char const *, int, int);
+  /// @brief register a warning
+  void registerWarning(int, char const*, int, int);
 
-            /// @brief push an AstNode into the array element on top of the stack
-            void pushArrayElement(AstNode *);
+  /// @brief push an AstNode into the array element on top of the stack
+  void pushArrayElement(AstNode*);
 
-            /// @brief push an AstNode into the object element on top of the stack
-            void pushObjectElement(char const *, size_t, AstNode *);
+  /// @brief push an AstNode into the object element on top of the stack
+  void pushObjectElement(char const*, size_t, AstNode*);
 
-            /// @brief push an AstNode into the object element on top of the stack
-            void pushObjectElement(AstNode *, AstNode *);
+  /// @brief push an AstNode into the object element on top of the stack
+  void pushObjectElement(AstNode*, AstNode*);
 
-            /// @brief push a temporary value on the parser's stack
-            void pushStack(void *);
+  /// @brief push a temporary value on the parser's stack
+  void pushStack(void*);
 
-            /// @brief pop a temporary value from the parser's stack
-            void *popStack();
+  /// @brief pop a temporary value from the parser's stack
+  void* popStack();
 
-            /// @brief peek at a temporary value from the parser's stack
-            void *peekStack();
+  /// @brief peek at a temporary value from the parser's stack
+  void* peekStack();
 
-        private:
-            /// @brief a pointer to the start of the query string
-            QueryString const &queryString() const { return _query->queryString(); }
+ private:
+  /// @brief a pointer to the start of the query string
+  QueryString const& queryString() const { return _query->queryString(); }
 
-        private:
-            /// @brief the query
-            Query *_query;
+ private:
+  /// @brief the query
+  Query* _query;
 
-            /// @brief abstract syntax tree for the query, build during parsing
-            Ast *_ast;
+  /// @brief abstract syntax tree for the query, build during parsing
+  Ast* _ast;
 
-            /// @brief lexer / scanner used when parsing the query (Aql/tokens.ll)
-            void *_scanner;
+  /// @brief lexer / scanner used when parsing the query (Aql/tokens.ll)
+  void* _scanner;
 
-            char const *_queryStringStart;
+  char const* _queryStringStart;
 
-            /// @brief currently processed part of the query string
-            char const *_buffer;
+  /// @brief currently processed part of the query string
+  char const* _buffer;
 
-            /// @brief remaining length of the query string, used during parsing
-            size_t _remainingLength;
+  /// @brief remaining length of the query string, used during parsing
+  size_t _remainingLength;
 
-            /// @brief current offset into query string, used during parsing
-            size_t _offset;
+  /// @brief current offset into query string, used during parsing
+  size_t _offset;
 
-            /// @brief pointer into query string, used temporarily during parsing
-            char const *_marker;
+  /// @brief pointer into query string, used temporarily during parsing
+  char const* _marker;
 
-            /// @brief a stack of things, used temporarily during parsing
-            std::vector<void *> _stack;
-        };
-    }
+  /// @brief a stack of things, used temporarily during parsing
+  std::vector<void*> _stack;
+};
+}
 }
 
 /// @brief forward for the parse function provided by the parser (.y)
-int Aqlparse(arangodb::aql::Parser *);
+int Aqlparse(arangodb::aql::Parser*);
 
 /// @brief forward for the init function provided by the lexer (.l)
-int Aqllex_init(void **);
+int Aqllex_init(void**);
 
 /// @brief forward for the shutdown function provided by the lexer (.l)
-int Aqllex_destroy(void *);
+int Aqllex_destroy(void*);
 
 /// @brief forward for the context function provided by the lexer (.l)
-void Aqlset_extra(arangodb::aql::Parser *, void *);
+void Aqlset_extra(arangodb::aql::Parser*, void*);
 
 #endif
