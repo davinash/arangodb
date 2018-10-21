@@ -552,6 +552,39 @@ SET(ARANGOD_SOURCES
   VocBase/ManagedDocumentResult.cpp
   VocBase/ticks.cpp
   VocBase/vocbase.cpp
+  SqlAql/parser/bison_parser.cpp
+  SqlAql/parser/bison_parser.h
+  SqlAql/parser/flex_lexer.cpp
+  SqlAql/parser/flex_lexer.h
+  SqlAql/parser/parser_typedef.h
+  SqlAql/sql/CreateStatement.h
+  SqlAql/sql/DeleteStatement.h
+  SqlAql/sql/DropStatement.h
+  SqlAql/sql/ExecuteStatement.h
+  SqlAql/sql/Expr.cpp
+  SqlAql/sql/Expr.h
+  SqlAql/sql/ImportStatement.h
+  SqlAql/sql/InsertStatement.h
+  SqlAql/sql/PrepareStatement.cpp
+  SqlAql/sql/PrepareStatement.h
+  SqlAql/sql/SelectStatement.h
+  SqlAql/sql/ShowStatement.h
+  SqlAql/sql/SQLStatement.cpp
+  SqlAql/sql/SQLStatement.h
+  SqlAql/sql/statements.cpp
+  SqlAql/sql/statements.h
+  SqlAql/sql/Table.h
+  SqlAql/sql/UpdateStatement.h
+  SqlAql/util/sqlhelper.cpp
+  SqlAql/util/sqlhelper.h
+  SqlAql/SQLParser.cpp
+  SqlAql/SQLParser.h
+  SqlAql/SQLParserResult.cpp
+  SqlAql/SQLParserResult.h
+  SqlAql/aql/SQLStatementToAQL.cpp
+  SqlAql/aql/SQLStatementToAQL.h
+  SqlAql/aql/AQLSelectStatement.cpp
+  SqlAql/aql/AQLSelectStatement.h
   ${ADDITIONAL_BIN_ARANGOD_SOURCES}
 )
 
