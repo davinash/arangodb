@@ -210,6 +210,11 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const &slice) {
     Tokenize(queryStr, queryTokens, "#");
     if (queryTokens.size() == 2) {
         std::string translatedAQLQuery(hsql::SQLStatementToAQL::convert(queryTokens.at(0)).c_str());
+        if (translatedAQLQuery.compare("ERROR") == 0) {
+            LOG_TOPIC(INFO, Logger::AQL) << " Could not convert Query from SQL to AQL";
+            generateError(rest::ResponseCode::BAD, TRI_ERROR_TYPE_ERROR,
+                          "Could not convert SQL query to AQL ");
+        }
         LOG_TOPIC(INFO, Logger::AQL) << "Corresponding AQL Query = " << "[" << translatedAQLQuery << "]";
 
         auto query = std::make_unique<aql::Query>(
