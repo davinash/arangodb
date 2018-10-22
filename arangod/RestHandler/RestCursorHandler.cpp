@@ -37,6 +37,10 @@
 #include <velocypack/Value.h>
 #include <velocypack/velocypack-aliases.h>
 
+#include <string>
+#include <vector>
+#include "SqlAql/aql/SQLStatementToAQL.h"
+
 using namespace arangodb;
 using namespace arangodb::basics;
 using namespace arangodb::rest;
@@ -110,6 +114,23 @@ bool RestCursorHandler::cancel() {
   return cancelQuery();
 }
 
+void Tokenize(const std::string &str,
+              std::vector<std::string> &tokens,
+              const std::string &delimiters = " ") {
+  // Skip delimiters at beginning.
+  std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  // Find first "non-delimiter".
+  std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+  while (std::string::npos != pos || std::string::npos != lastPos) {
+    // Found a token, add it to the vector.
+    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    // Skip delimiters.  Note the "not_of"
+    lastPos = str.find_first_not_of(delimiters, pos);
+    // Find next "non-delimiter"
+    pos = str.find_first_of(delimiters, lastPos);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief register the query either as streaming cursor or in _query
 /// the query is not executed here.
@@ -178,22 +199,53 @@ RestStatus RestCursorHandler::registerQueryOrCursor(VPackSlice const& slice) {
   char const* queryStr = querySlice.getString(l);
   TRI_ASSERT(l > 0);
 
-  auto query = std::make_unique<aql::Query>(
-    false,
-    _vocbase,
-    arangodb::aql::QueryString(queryStr, static_cast<size_t>(l)),
-    bindVarsBuilder,
-    _options,
-    arangodb::aql::PART_MAIN
-  );
+  LOG_TOPIC(INFO, Logger::AQL) << "Query Received -> " << queryStr;
+  // Hack to handle the SQL Queries START HERE
+  std::vector<std::string> queryTokens;
+  Tokenize(queryStr, queryTokens, "#");
+  if (queryTokens.size() == 2) {
+    std::string translatedAQLQuery(hsql::SQLStatementToAQL::convert(queryTokens.at(0)).c_str());
+    if (translatedAQLQuery.compare("ERROR") == 0) {
+      LOG_TOPIC(INFO, Logger::AQL) << " Could not convert Query from SQL to AQL";
+      generateError(rest::ResponseCode::BAD, TRI_ERROR_TYPE_ERROR,
+                    "Could not convert SQL query to AQL ");
+    }
+    LOG_TOPIC(INFO, Logger::AQL) << "Corresponding AQL Query = " << "[" << translatedAQLQuery << "]";
 
-  std::shared_ptr<aql::SharedQueryState> ss = query->sharedState();
-  auto self = shared_from_this();
-  ss->setContinueHandler([this, self, ss] {
-    continueHandlerExecution();
-  });
+    auto query = std::make_unique<aql::Query>(
+            false,
+            _vocbase,
+            arangodb::aql::QueryString(translatedAQLQuery),
+            bindVarsBuilder,
+            _options,
+            arangodb::aql::PART_MAIN
+    );
+    std::shared_ptr<aql::SharedQueryState> ss = query->sharedState();
+    auto self = shared_from_this();
+    ss->setContinueHandler([this, self, ss] {
+        continueHandlerExecution();
+    });
+    registerQuery(std::move(query));
 
-  registerQuery(std::move(query));
+  } else {
+    auto query = std::make_unique<aql::Query>(
+            false,
+            _vocbase,
+            arangodb::aql::QueryString(queryStr, static_cast<size_t>(l)),
+            bindVarsBuilder,
+            _options,
+            arangodb::aql::PART_MAIN
+    );
+    std::shared_ptr<aql::SharedQueryState> ss = query->sharedState();
+    auto self = shared_from_this();
+    ss->setContinueHandler([this, self, ss] {
+        continueHandlerExecution();
+    });
+
+    registerQuery(std::move(query));
+  }
+
+
   return processQuery();
 }
 
