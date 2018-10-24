@@ -1,3 +1,4 @@
+
 //
 // Created by adongre on 10/17/18.
 //
@@ -6,6 +7,13 @@
 #include <sstream>
 #include "SQLStatementToAQL.h"
 #include "../SQLParser.h"
+
+
+#ifdef DEBUG_BUILD
+#define DEBUG(x) do { std::cout << x << std::endl; } while (0)
+#else
+#define DEBUG(x)
+#endif
 
 
 namespace hsql {
@@ -21,27 +29,27 @@ namespace hsql {
         std::string opString = "";
         switch (expr->opType) {
             case kOpAnd:
-                std::cout << "-----> walkOperatorExpression::kOpAnd " << std::endl;
+                DEBUG("-----> walkOperatorExpression::kOpAnd ");
                 opString = "AND";
                 break;
             case kOpOr:
-                std::cout << "-----> walkOperatorExpression::kOpOr " << std::endl;
+                DEBUG ("-----> walkOperatorExpression::kOpOr ");
                 opString = "OR";
                 break;
             case kOpNot:
-                std::cout << "-----> walkOperatorExpression::kOpNot " << std::endl;
+                DEBUG("-----> walkOperatorExpression::kOpNot ");
                 opString = "!=";
                 break;
             case kOpEquals:
-                std::cout << "-----> walkOperatorExpression::kOpEquals " << std::endl;
+                DEBUG("-----> walkOperatorExpression::kOpEquals ");
                 opString = "==";
                 break;
             default:
                 break;
         }
-        std::cout << "-----> walkExpression with " << level << std::endl;
+        DEBUG("-----> walkExpression with " << level);
         walkExpression(expr->expr, aqlQuery, true, level, isJoinQuery, false);
-        if ( isJoinQuery ) {
+        if (isJoinQuery) {
             level++;
         }
         if (expr->expr2 != nullptr) {
@@ -68,17 +76,18 @@ namespace hsql {
                 }
                 break;
             case kExprColumnRef:
-                std::cout << "-----> walkExpression::kExprColumnRef " << expr->name << std::endl;
+                DEBUG("-----> walkExpression::kExprColumnRef " << expr->name);
                 if (colNamePrefix) {
                     if (isJoinQuery) {
-                        if ( decorateColumnName) {
-                            aqlQuery << expr->name << " : " << COLUMN_NAME_PREFIX << level << "." << expr->name << SINGLE_SPACE;
+                        if (decorateColumnName) {
+                            aqlQuery << expr->name << " : " << COLUMN_NAME_PREFIX << level << "." << expr->name
+                                     << SINGLE_SPACE;
                         } else {
                             aqlQuery << COLUMN_NAME_PREFIX << level << "." << expr->name << SINGLE_SPACE;
                         }
                     } else {
-                        if ( decorateColumnName) {
-                            aqlQuery << expr->name << " : "  << COLUMN_NAME_PREFIX << "." << expr->name << SINGLE_SPACE;
+                        if (decorateColumnName) {
+                            aqlQuery << expr->name << " : " << COLUMN_NAME_PREFIX << "." << expr->name << SINGLE_SPACE;
                         } else {
                             aqlQuery << COLUMN_NAME_PREFIX << "." << expr->name << SINGLE_SPACE;
                         }
@@ -92,37 +101,37 @@ namespace hsql {
                 }
                 break;
             case kExprLiteralFloat:
-                std::cout << "-----> walkExpression::kExprLiteralFloat" << std::endl;
+                DEBUG("-----> walkExpression::kExprLiteralFloat");
                 break;
             case kExprLiteralInt:
-                std::cout << "-----> walkExpression::kExprLiteralInt" << std::endl;
+                DEBUG("-----> walkExpression::kExprLiteralInt");
                 aqlQuery << expr->ival << SINGLE_SPACE;
                 break;
             case kExprLiteralString:
-                std::cout << "-----> walkExpression::kExprLiteralString" << std::endl;
+                DEBUG("-----> walkExpression::kExprLiteralString");
                 aqlQuery << "'" << expr->name << "'" << SINGLE_SPACE;
                 break;
             case kExprFunctionRef:
-                std::cout << "-----> walkExpression::kExprFunctionRef" << std::endl;
+                DEBUG("-----> walkExpression::kExprFunctionRef");
                 for (Expr *e : *expr->exprList) walkExpression(e, aqlQuery, false, level, isJoinQuery, false);
                 break;
             case kExprOperator:
-                std::cout << "-----> walkExpression::kExprOperator" << std::endl;
+                DEBUG("-----> walkExpression::kExprOperator");
                 walkOperatorExpression(expr, aqlQuery, level, isJoinQuery);
                 break;
             case kExprSelect:
-                std::cout << "-----> walkExpression::kExprArray" << std::endl;
+                DEBUG("-----> walkExpression::kExprArray");
                 walkSelectStatement(expr->select, aqlQuery, level, isJoinQuery);
                 break;
             case kExprParameter:
-                std::cout << "-----> walkExpression::kExprParameter" << std::endl;
+                DEBUG("-----> walkExpression::kExprParameter");
                 break;
             case kExprArray:
-                std::cout << "-----> walkExpression::kExprArray" << std::endl;
+                DEBUG("-----> walkExpression::kExprArray");
                 for (Expr *e : *expr->exprList) walkExpression(e, aqlQuery, false, level, isJoinQuery, false);
                 break;
             case kExprArrayIndex:
-                std::cout << "-----> walkExpression::kExprArrayIndex" << std::endl;
+                DEBUG("-----> walkExpression::kExprArrayIndex");
                 walkExpression(expr->expr, aqlQuery, false, level, isJoinQuery, false);
                 break;
             default:
@@ -151,11 +160,11 @@ namespace hsql {
                 walkTableRefInfo(table->join->left, aqlQuery, level, true);
                 level++;
                 walkTableRefInfo(table->join->right, aqlQuery, level, true);
-                std::cout << "JOIN FILTER CONDITION" << std::endl;
+                DEBUG("JOIN FILTER CONDITION");
                 aqlQuery << " FILTER ";
                 level = 0;
                 walkExpression(table->join->condition, aqlQuery, true, level, true, false);
-                std::cout << "JOIN FILTER CONDITION DONE " << std::endl;
+                DEBUG("JOIN FILTER CONDITION DONE ");
                 break;
             case kTableCrossProduct:
                 break;
@@ -215,18 +224,48 @@ namespace hsql {
         }
     }
 
-    std::string SQLStatementToAQL::convertToSelectAQL(const SQLStatement *pStatement) {
+    std::string SQLStatementToAQL::convertToSelectAQL(const SelectStatement *pStatement) {
 
-        SelectStatement *pStmt = (SelectStatement *) pStatement;
         std::ostringstream aqlQuery;
         int level = 0;
-        walkSelectStatement(pStmt, aqlQuery, level, false);
+        walkSelectStatement(pStatement, aqlQuery, level, false);
+        return aqlQuery.str();
+    }
+
+    void SQLStatementToAQL::walkInsertStatement(const InsertStatement *pStatement, std::ostringstream &aqlQuery) {
+        aqlQuery << "INSERT  { ";
+        if (pStatement->columns != nullptr) {
+        }
+        switch (pStatement->type) {
+            case kInsertValues: {
+                std::vector<Expr *> v = *pStatement->values;
+                std::vector<char *> c = *pStatement->columns;
+                int level = 0;
+                for (auto i = 0u; i < v.size(); i++) {
+                    if (i != 0) {
+                        aqlQuery << " , ";
+                    }
+                    aqlQuery << c.at(i) << ": ";
+                    walkExpression(v.at(i), aqlQuery, true, level, false, false);
+                }
+                aqlQuery << " } ";
+                aqlQuery << "INTO " << pStatement->tableName;
+            }
+                break;
+            case kInsertSelect:
+                break;
+        }
+    }
+
+    std::string SQLStatementToAQL::convertToInsertAQL(const InsertStatement *pStatement) {
+        std::ostringstream aqlQuery;
+        walkInsertStatement(pStatement, aqlQuery);
         return aqlQuery.str();
     }
 
 
     std::string SQLStatementToAQL::convert(const std::string &query) {
-        std::cout << "Query = " << query << std::endl;
+        DEBUG("Query = " << query);
         SQLParserResult result;
         SQLParser::parse(query, &result);
         if (result.isValid()) {
@@ -234,8 +273,9 @@ namespace hsql {
                 const SQLStatement *stmt = result.getStatement(i);
                 switch (stmt->type()) {
                     case kStmtSelect:
-                        return convertToSelectAQL(stmt);
+                        return convertToSelectAQL((SelectStatement *) stmt);
                     case kStmtInsert:
+                        return convertToInsertAQL((InsertStatement *) stmt);
                         break;
                     case kStmtCreate:
                         break;
