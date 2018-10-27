@@ -192,6 +192,14 @@ static AstNode const* GetIntoExpression(AstNode const* node) {
 %token T_SORT "SORT declaration"
 %token T_LIMIT "LIMIT declaration"
 
+/* Change for SQL Extention Starts */
+
+%token <fval> FLOATVAL
+%token <ival> INTVAL
+
+/* Change for SQL Extention Ends */
+
+
 %token T_ASC "ASC keyword"
 %token T_DESC "DESC keyword"
 %token T_IN "IN keyword"
@@ -266,6 +274,27 @@ static AstNode const* GetIntoExpression(AstNode const* node) {
 %token T_ALL "all modifier"
 %token T_NONE "none modifier"
 
+
+/* Change for SQL Extention Starts */
+/* SQL Keywords */
+%token DEALLOCATE PARAMETERS INTERSECT TEMPORARY TIMESTAMP
+%token DISTINCT NVARCHAR RESTRICT TRUNCATE ANALYZE BETWEEN
+%token CASCADE COLUMNS CONTROL DEFAULT EXECUTE EXPLAIN
+%token HISTORY INTEGER NATURAL PREPARE PRIMARY SCHEMAS
+%token SPATIAL VIRTUAL BEFORE COLUMN CREATE DELETE DIRECT
+%token DOUBLE ESCAPE EXCEPT EXISTS EXTRACT GLOBAL HAVING IMPORT
+%token INSERT ISNULL OFFSET RENAME SCHEMA SELECT SORTED
+%token TABLES UNIQUE UNLOAD UPDATE VALUES AFTER ALTER CROSS
+%token DELTA GROUP INDEX INNER LIMIT LOCAL MERGE MINUS ORDER
+%token OUTER RIGHT TABLE UNION USING WHERE CALL CASE DATE
+%token DESC DROP ELSE FILE FROM FULL HASH HINT INTO JOIN
+%token LEFT LIKE LOAD NULL PLAN SHOW TEXT THEN TIME
+%token VIEW WHEN WITH ADD ALL AND ASC CSV END FOR INT KEY
+%token NOT OFF SET TBL TOP AS BY IF IN IS OF ON OR TO
+%token ARRAY CONCAT ILIKE SECOND MINUTE HOUR DAY MONTH YEAR
+
+/* Change for SQL Extention Ends */
+
 /* define operator precedence */
 %left T_COMMA
 %left T_DISTINCT
@@ -288,6 +317,32 @@ static AstNode const* GetIntoExpression(AstNode const* node) {
 %left INDEXED
 %left EXPANSION
 %left T_SCOPE
+
+/* Change for SQL Extention Starts */
+%left		OR
+%left		AND
+%right		NOT
+%nonassoc	'=' EQUALS NOTEQUALS LIKE ILIKE
+%nonassoc	'<' '>' LESS GREATER LESSEQ GREATEREQ
+
+%nonassoc	NOTNULL
+%nonassoc	ISNULL
+%nonassoc	IS				/* sets precedence for IS NULL, etc */
+%left		'+' '-'
+%left		'*' '/' '%'
+%left		'^'
+%left		CONCAT
+
+/* Unary Operators */
+%left		'[' ']'
+%left		'(' ')'
+%left		'.'
+%left   JOIN
+
+%token <sval> IDENTIFIER STRING
+
+/* Change for SQL Extention Ends */
+
 
 /* define token return types */
 %type <strval> T_STRING
@@ -457,6 +512,10 @@ statement_block_statement:
     }
   | upsert_statement {
     }
+    /* Change for SQL Extention Starts */
+  | select_statement{
+    }
+    /* Change for SQL Extention Ends */
   ;
 
 for_statement:
@@ -1809,3 +1868,389 @@ variable_name:
       $$ = $1;
     }
   ;
+
+/* Change for SQL Extention Starts */
+
+/******************************
+ * Select Statement
+ ******************************/
+
+select_statement:
+		select_with_paren
+	|	select_no_paren
+	|	select_with_paren set_operator select_paren_or_clause opt_order opt_limit {
+		}
+	;
+
+select_with_paren:
+		'(' select_no_paren ')' { }
+	|	'(' select_with_paren ')' {  }
+	;
+
+select_paren_or_clause:
+		select_with_paren
+	|	select_clause
+	;
+
+select_no_paren:
+		select_clause opt_order opt_limit {
+		}
+	|	select_clause set_operator select_paren_or_clause opt_order opt_limit {
+		}
+	;
+
+opt_limit:
+		LIMIT int_literal {  }
+	|	LIMIT int_literal OFFSET int_literal { ; }
+	|	OFFSET int_literal {  }
+	|	LIMIT ALL {  }
+	|	LIMIT NULL {   }
+	|	LIMIT ALL OFFSET int_literal {  }
+	|	LIMIT NULL OFFSET int_literal {  }
+	|	/* empty */ { }
+	;
+
+int_literal:
+		INTEGER {  }
+	;
+
+opt_order:
+		ORDER BY order_list {  }
+	|	/* empty */ {  }
+	;
+
+order_list:
+		order_desc {  }
+	|	order_list ',' order_desc {  }
+	;
+
+order_desc:
+		expr opt_order_type {  }
+	;
+
+opt_order_type:
+		ASC {  }
+	|	DESC {  }
+	|	/* empty */ {  }
+	;
+
+expr:
+		operand
+	|	between_expr
+	|	logic_expr
+	|	exists_expr
+	|	in_expr
+	;
+
+between_expr:
+		operand BETWEEN operand AND operand {  }
+	;
+
+exists_expr:
+		EXISTS '(' select_no_paren ')' {  }
+	|	NOT EXISTS '(' select_no_paren ')' {  }
+	;
+
+in_expr:
+		operand IN '(' expr_list ')'			{ }
+	|	operand NOT IN '(' expr_list ')'		{ }
+	|	operand IN '(' select_no_paren ')'		{ }
+	|	operand NOT IN '(' select_no_paren ')'	{ }
+	;
+
+expr_list:
+		expr_alias {  }
+	|	expr_list ',' expr_alias {  }
+	;
+
+
+expr_alias:
+		expr opt_alias {
+		}
+	;
+
+literal:
+		string_literal
+	|	num_literal
+	|	null_literal
+	|	param_expr
+	;
+
+string_literal:
+		T_STRING {  }
+	;
+
+logic_expr:
+		expr T_AND expr	{ }
+	|	expr T_OR expr	{ }
+	;
+
+
+num_literal:
+		FLOATVAL {  }
+	|	int_literal
+	;
+
+int_literal:
+		INTVAL {  }
+	;
+
+null_literal:
+	    	T_NULL {  }
+	;
+
+param_expr:
+		'?' {
+		}
+	;
+
+operand:
+		'(' expr ')' {  }
+	|	array_index
+	|	scalar_expr
+	|	unary_expr
+	|	binary_expr
+	|	case_expr
+	|	function_expr
+	|	extract_expr
+	|	array_expr
+	|	'(' select_no_paren ')' {  }
+	;
+
+array_expr:
+	  	ARRAY '[' expr_list ']' {  }
+	;
+
+array_index:
+	   	operand '[' int_literal ']' { }
+	;
+
+// CASE grammar based on: flex & bison by John Levine
+// https://www.safaribooksonline.com/library/view/flex-bison/9780596805418/ch04.html#id352665
+case_expr:
+		CASE expr case_list END         	{ }
+	|	CASE expr case_list ELSE expr END	{ }
+	|	CASE case_list END			        { }
+	|	CASE case_list ELSE expr END		{ }
+	;
+
+case_list:
+		WHEN expr THEN expr              { }
+	|	case_list WHEN expr THEN expr    { }
+	;
+
+binary_expr:
+		comp_expr
+	|	operand '-' operand			{  }
+	|	operand '+' operand			{  }
+	|	operand '/' operand			{  }
+	|	operand '*' operand			{  }
+	|	operand '%' operand			{  }
+	|	operand '^' operand			{  }
+	|	operand LIKE operand		{  }
+	|	operand NOT LIKE operand	{  }
+	|	operand ILIKE operand		{  }
+	|	operand CONCAT operand	{  }
+	;
+
+comp_expr:
+		operand '=' operand			{ }
+	|	operand EQUALS operand		{ }
+	|	operand NOTEQUALS operand	{ }
+	|	operand '<' operand			{ }
+	|	operand '>' operand			{ }
+	|	operand LESSEQ operand		{ }
+	|	operand GREATEREQ operand	{ }
+	;
+
+function_expr:
+               IDENTIFIER '(' ')' { }
+       |       IDENTIFIER '(' opt_distinct expr_list ')' { }
+       ;
+
+extract_expr:
+         EXTRACT '(' datetime_field FROM expr ')'    { }
+    ;
+
+datetime_field:
+        SECOND {  }
+    |   MINUTE {  }
+    |   HOUR {  }
+    |   DAY {  }
+    |   MONTH {  }
+    |   YEAR { }
+
+opt_alias:
+		alias
+	|	/* empty */ {  }
+
+alias:
+		AS IDENTIFIER {  }
+	|	IDENTIFIER {  }
+	;
+
+opt_distinct:
+		DISTINCT {  }
+	|	/* empty */ { }
+	;
+
+scalar_expr:
+		column_name
+	|	literal
+	;
+
+select_clause:
+    		SELECT opt_top opt_distinct select_list opt_from_clause opt_where opt_group {
+    		}
+    	;
+
+column_name:
+		IDENTIFIER { }
+	|	IDENTIFIER '.' IDENTIFIER {  }
+	|	'*' { }
+	|	IDENTIFIER '.' '*' {  }
+	;
+
+opt_from_clause:
+        from_clause  { }
+    |   /* empty */  {  }
+
+from_clause:
+		FROM table_ref {  }
+	;
+
+opt_group:
+		GROUP BY expr_list opt_having {
+		}
+	|	/* empty */ {  }
+	;
+
+opt_having:
+		HAVING expr { }
+	|	/* empty */ { }
+
+opt_top:
+		TOP int_literal {  }
+	|	/* empty */ {  }
+	;
+
+opt_where:
+		WHERE expr {  }
+	|	/* empty */ {  }
+	;
+
+select_list:
+		expr_list
+	;
+
+set_operator:
+		set_type opt_all
+	;
+
+set_type:
+		UNION
+	|	INTERSECT
+	|	EXCEPT
+	;
+
+opt_all:
+		ALL
+	|	/* empty */
+	;
+
+table_ref:
+		table_ref_atomic
+	|	table_ref_commalist ',' table_ref_atomic {
+		}
+	;
+
+
+table_ref_atomic:
+		nonjoin_table_ref_atomic
+	|	join_clause
+	;
+
+nonjoin_table_ref_atomic:
+		table_ref_name
+	|	'(' select_statement ')' opt_table_alias {
+		}
+	;
+
+table_ref_commalist:
+		table_ref_atomic { }
+	|	table_ref_commalist ',' table_ref_atomic {  }
+	;
+
+
+table_ref_name:
+		table_name opt_table_alias {
+		}
+	;
+
+
+table_name:
+		IDENTIFIER                { }
+	|	IDENTIFIER '.' IDENTIFIER { }
+	;
+
+
+table_alias:
+		alias
+	|	AS IDENTIFIER '(' ident_commalist ')' { }
+	;
+
+opt_table_alias:
+		table_alias
+	|	/* empty */ { }
+
+ident_commalist:
+		IDENTIFIER {  }
+	|	ident_commalist ',' IDENTIFIER { }
+	;
+
+/******************************
+ * Join Statements
+ ******************************/
+
+join_clause:
+		table_ref_atomic NATURAL JOIN nonjoin_table_ref_atomic
+		{
+
+		}
+	|	table_ref_atomic opt_join_type JOIN table_ref_atomic ON join_condition
+		{
+
+		}
+	|
+		table_ref_atomic opt_join_type JOIN table_ref_atomic USING '(' column_name ')'
+		{
+
+		}
+	;
+
+opt_join_type:
+		INNER		{ }
+	|	LEFT OUTER	{  }
+	|	LEFT		{  }
+	|	RIGHT OUTER	{  }
+	|	RIGHT		{  }
+	|	FULL OUTER	{  }
+	|	OUTER		{  }
+	|	FULL		{  }
+	|	CROSS		{  }
+	|	/* empty, default */	{  }
+	;
+
+
+join_condition:
+		expr
+		;
+
+unary_expr:
+		'-' operand {  }
+	|	NOT operand {  }
+	|	operand ISNULL {  }
+	|	operand IS NULL {  }
+	|	operand IS NOT NULL { std::cout << "Received " << std::endl;  }
+	;
+/* Change for SQL Extention Ends */
