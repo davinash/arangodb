@@ -126,6 +126,10 @@ class Parser {
   /// @brief peek at a temporary value from the parser's stack
   void* peekStack();
 
+  inline void setIsValid(bool success) {
+    _success = success;
+  }
+
  private:
   /// @brief a pointer to the start of the query string
   QueryString const& queryString() const { return _query->queryString(); }
@@ -156,6 +160,8 @@ class Parser {
 
   /// @brief a stack of things, used temporarily during parsing
   std::vector<void*> _stack;
+
+  bool _success;
 };
 }
 }

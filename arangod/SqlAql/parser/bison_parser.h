@@ -55,6 +55,7 @@ extern int hsql_debug;
 #include "../sql/statements.h"
 #include "../SQLParserResult.h"
 #include "parser_typedef.h"
+#include "../../Aql/Parser.h"
 
 // Auto update column and line number
 #define YY_USER_ACTION \
@@ -72,7 +73,7 @@ extern int hsql_debug;
 				} \
 		}
 
-#line 76 "bison_parser.h" /* yacc.c:1909  */
+#line 77 "bison_parser.h" /* yacc.c:1909  */
 
 /* Token type.  */
 #ifndef HSQL_TOKENTYPE
@@ -224,7 +225,7 @@ extern int hsql_debug;
 
 union HSQL_STYPE
 {
-#line 95 "bison_parser.y" /* yacc.c:1909  */
+#line 97 "bison_parser.y" /* yacc.c:1909  */
 
 	double fval;
 	int64_t ival;
@@ -265,7 +266,7 @@ union HSQL_STYPE
 	std::vector<hsql::Expr*>* expr_vec;
 	std::vector<hsql::OrderDescription*>* order_vec;
 
-#line 269 "bison_parser.h" /* yacc.c:1909  */
+#line 270 "bison_parser.h" /* yacc.c:1909  */
 };
 
 typedef union HSQL_STYPE HSQL_STYPE;
@@ -289,6 +290,6 @@ struct HSQL_LTYPE
 
 
 
-int hsql_parse (hsql::SQLParserResult* result, yyscan_t scanner);
+int hsql_parse (arangodb::aql::Parser* parser, yyscan_t scanner);
 
 #endif /* !YY_HSQL_BISON_PARSER_H_INCLUDED  */

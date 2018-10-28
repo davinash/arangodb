@@ -265,30 +265,30 @@ namespace hsql {
 
 
     std::string SQLStatementToAQL::convert(const std::string &query) {
-        DEBUG("Query = " << query);
-        SQLParserResult result;
-        SQLParser::parse(query, &result);
-        if (result.isValid()) {
-            for (auto i = 0u; i < result.size(); ++i) {
-                const SQLStatement *stmt = result.getStatement(i);
-                switch (stmt->type()) {
-                    case kStmtSelect:
-                        return convertToSelectAQL((SelectStatement *) stmt);
-                    case kStmtInsert:
-                        return convertToInsertAQL((InsertStatement *) stmt);
-                        break;
-                    case kStmtCreate:
-                        break;
-                    case kStmtDelete:
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-        } else {
-            printf("[ SQLStatementToAQL::convert ] -> Invalid Query\n");
-        }
+//        DEBUG("Query = " << query);
+//        SQLParserResult result;
+//        SQLParser::parse(query, &result);
+//        if (result.isValid()) {
+//            for (auto i = 0u; i < result.size(); ++i) {
+//                const SQLStatement *stmt = result.getStatement(i);
+//                switch (stmt->type()) {
+//                    case kStmtSelect:
+//                        return convertToSelectAQL((SelectStatement *) stmt);
+//                    case kStmtInsert:
+//                        return convertToInsertAQL((InsertStatement *) stmt);
+//                        break;
+//                    case kStmtCreate:
+//                        break;
+//                    case kStmtDelete:
+//                        break;
+//                    default:
+//                        break;
+//                }
+//            }
+//
+//        } else {
+//            printf("[ SQLStatementToAQL::convert ] -> Invalid Query\n");
+//        }
         return "";
     }
 }

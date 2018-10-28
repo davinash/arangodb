@@ -12,7 +12,7 @@ namespace hsql {
   }
 
   // static
-  bool SQLParser::parse(const std::string& sql, SQLParserResult* result) {
+  bool SQLParser::parse(const std::string& sql, arangodb::aql::Parser* result) {
     yyscan_t scanner;
     YY_BUFFER_STATE state;
 
@@ -37,11 +37,11 @@ namespace hsql {
   }
 
   // static
-  bool SQLParser::parseSQLString(const char* sql, SQLParserResult* result) {
+  bool SQLParser::parseSQLString(const char* sql, arangodb::aql::Parser* result) {
     return parse(sql, result);
   }
 
-  bool SQLParser::parseSQLString(const std::string& sql, SQLParserResult* result) {
+  bool SQLParser::parseSQLString(const std::string& sql, arangodb::aql::Parser* result) {
     return parse(sql, result);
   }
 

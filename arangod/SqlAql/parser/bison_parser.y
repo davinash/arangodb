@@ -19,9 +19,9 @@
 
 using namespace hsql;
 
-int yyerror(YYLTYPE* llocp, SQLParserResult* result, yyscan_t scanner, const char *msg) {
-	result->setIsValid(false);
-	result->setErrorDetails(strdup(msg), llocp->first_line, llocp->first_column);
+int yyerror(YYLTYPE* llocp, arangodb::aql::Parser* result, yyscan_t scanner, const char *msg) {
+	//result->setIsValid(false);
+	//result->setErrorDetails(strdup(msg), llocp->first_line, llocp->first_column);
 	return 0;
 }
 
@@ -38,6 +38,7 @@ int yyerror(YYLTYPE* llocp, SQLParserResult* result, yyscan_t scanner, const cha
 #include "../sql/statements.h"
 #include "../SQLParserResult.h"
 #include "parser_typedef.h"
+#include "../../Aql/Parser.h"
 
 // Auto update column and line number
 #define YY_USER_ACTION \
@@ -85,7 +86,8 @@ int yyerror(YYLTYPE* llocp, SQLParserResult* result, yyscan_t scanner, const cha
 %lex-param   { yyscan_t scanner }
 
 // Define additional parameters for yyparse
-%parse-param { hsql::SQLParserResult* result }
+//%parse-param { hsql::SQLParserResult* result }
+%parse-param { arangodb::aql::Parser* parser }
 %parse-param { yyscan_t scanner }
 
 
@@ -249,17 +251,17 @@ int yyerror(YYLTYPE* llocp, SQLParserResult* result, yyscan_t scanner, const cha
 // Defines our general input.
 input:
 		statement_list opt_semicolon {
-			for (SQLStatement* stmt : *$1) {
+			//for (SQLStatement* stmt : *$1) {
 				// Transfers ownership of the statement.
-				result->addStatement(stmt);
-			}
+				////result->addStatement(stmt);
+			//}
 
 			unsigned param_id = 0;
 			for (void* param : yyloc.param_list) {
 				if (param != nullptr) {
 					Expr* expr = (Expr*) param;
 					expr->ival = param_id;
-					result->addParameter(expr);
+					//result->addParameter(expr);
 					++param_id;
 				}
 			}
@@ -643,6 +645,8 @@ opt_all:
 
 select_clause:
 		SELECT opt_top opt_distinct select_list opt_from_clause opt_where opt_group {
+		    //parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
+
 			$$ = new SelectStatement();
 			$$->limit = $2;
 			$$->selectDistinct = $3;

@@ -14,18 +14,18 @@ namespace hsql {
     // Returns true if the lexer and parser could run without internal errors.
     // This does NOT mean that the SQL string was valid SQL. To check that
     // you need to check result->isValid();
-    static bool parse(const std::string& sql, SQLParserResult* result);
+    static bool parse(const std::string& sql, arangodb::aql::Parser* result);
 
     // Run tokenization on the given string and store the tokens in the output vector.
     static bool tokenize(const std::string& sql, std::vector<int16_t>* tokens);
 
     // Deprecated.
     // Old method to parse SQL strings. Replaced by parse().
-    static bool parseSQLString(const char* sql, SQLParserResult* result);
+    static bool parseSQLString(const char* sql, arangodb::aql::Parser* result);
 
     // Deprecated.
     // Old method to parse SQL strings. Replaced by parse().
-    static bool parseSQLString(const std::string& sql, SQLParserResult* result);
+    static bool parseSQLString(const std::string& sql, arangodb::aql::Parser* result);
 
    private:
     SQLParser();

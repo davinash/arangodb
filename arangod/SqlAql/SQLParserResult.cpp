@@ -6,7 +6,8 @@ namespace hsql {
 
   SQLParserResult::SQLParserResult() :
     isValid_(false),
-    errorMsg_(nullptr) {};
+    errorMsg_(nullptr)
+    {};
 
   SQLParserResult::SQLParserResult(SQLStatement* stmt) :
     isValid_(false),

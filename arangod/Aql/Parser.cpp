@@ -40,7 +40,8 @@ Parser::Parser(Query* query)
       _remainingLength(0),
       _offset(0),
       _marker(nullptr),
-      _stack() {
+      _stack(),
+      _success(false){
   _stack.reserve(4);
     
   QueryString const& qs = queryString();

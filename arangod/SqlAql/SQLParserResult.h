@@ -2,12 +2,16 @@
 #define SQLPARSER_SQLPARSER_RESULT_H
 
 #include "sql/SQLStatement.h"
+#include "../Aql/Parser.h"
 
 namespace hsql {
   // Represents the result of the SQLParser.
   // If parsing was successful it contains a list of SQLStatement.
   class SQLParserResult {
    public:
+
+    arangodb::aql::Parser* parser;
+
     // Initialize with empty statement list.
     SQLParserResult();
 
