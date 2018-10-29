@@ -3,6 +3,7 @@
 
 #include "SQLParserResult.h"
 #include "sql/statements.h"
+#include "../Aql/Query.h"
 
 namespace hsql {
 
@@ -10,28 +11,43 @@ namespace hsql {
   class SQLParser {
    public:
 
+   /// @brief return the query during parsing
+   inline arangodb::aql::Query* query() { return _query; }
+
+      /// @brief return the ast during parsing
+      inline arangodb::aql::Ast* ast() { return _ast; }
+
+   /// @brief create the parser
+   explicit SQLParser(arangodb::aql::Query*);
+
     // Parses a given constant character SQL string into the result object.
     // Returns true if the lexer and parser could run without internal errors.
     // This does NOT mean that the SQL string was valid SQL. To check that
     // you need to check result->isValid();
-    static bool parse(const std::string& sql, arangodb::aql::Parser* result);
+    bool parse(bool withDetails);
 
     // Run tokenization on the given string and store the tokens in the output vector.
     static bool tokenize(const std::string& sql, std::vector<int16_t>* tokens);
 
-    // Deprecated.
-    // Old method to parse SQL strings. Replaced by parse().
-    static bool parseSQLString(const char* sql, arangodb::aql::Parser* result);
+//    // Deprecated.
+//    // Old method to parse SQL strings. Replaced by parse().
+//    static bool parseSQLString(const char* sql, arangodb::aql::Parser* result);
+//
+//    // Deprecated.
+//    // Old method to parse SQL strings. Replaced by parse().
+//    static bool parseSQLString(const std::string& sql, arangodb::aql::Parser* result);
 
-    // Deprecated.
-    // Old method to parse SQL strings. Replaced by parse().
-    static bool parseSQLString(const std::string& sql, arangodb::aql::Parser* result);
+      /// @brief push a temporary value on the parser's stack
+      void pushStack(void*);
+  private:
+      /// @brief the query
+      arangodb::aql::Query* _query;
 
-   private:
-    SQLParser();
+      /// @brief abstract syntax tree for the query, build during parsing
+      arangodb::aql::Ast* _ast;
+      /// @brief a stack of things, used temporarily during parsing
+      std::vector<void*> _stack;
   };
-
-
 } // namespace hsql
 
 

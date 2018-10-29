@@ -94,7 +94,7 @@ class Query {
     QueryString const& queryString,
     std::shared_ptr<arangodb::velocypack::Builder> const& bindParameters,
     std::shared_ptr<arangodb::velocypack::Builder> const& options,
-    QueryPart part
+    QueryPart part, bool isSqlQuery = false
   );
 
   /// Used to put together query snippets in RestAqlHandler
@@ -103,7 +103,7 @@ class Query {
     TRI_vocbase_t& vocbase,
     std::shared_ptr<arangodb::velocypack::Builder> const& queryStruct,
     std::shared_ptr<arangodb::velocypack::Builder> const& options,
-    QueryPart
+    QueryPart, bool isSqlQuery = false
   );
 
   virtual ~Query();
@@ -118,6 +118,9 @@ class Query {
   
 /// @brief whether or not the query is killed
   bool killed() const;
+
+  /// @brief whether or not the query is SQL
+  bool isSqlQuery() const;
 
   /// @brief set the query to killed
   void kill();
@@ -463,6 +466,9 @@ class Query {
   
   /// @brief whether or not the hash was already calculated
   mutable bool _queryHashCalculated = false;
+
+  /// @brief wheter or not this is SQL Query
+  bool _isSqlQuery;
 };
 
 }

@@ -4,15 +4,19 @@
 #include "parser/flex_lexer.h"
 #include <stdio.h>
 #include <string>
+#include <iostream>
 
 namespace hsql {
 
-  SQLParser::SQLParser() {
-    fprintf(stderr, "SQLParser only has static methods atm! Do not initialize!\n");
-  }
+    SQLParser::SQLParser(arangodb::aql::Query* query)
+      : _query(query),
+        _ast(query->ast()),
+        _stack() {
 
+        _stack.reserve(4);
+    }
   // static
-  bool SQLParser::parse(const std::string& sql, arangodb::aql::Parser* result) {
+  bool SQLParser::parse(bool withDetails) {
     yyscan_t scanner;
     YY_BUFFER_STATE state;
 
@@ -21,14 +25,18 @@ namespace hsql {
       fprintf(stderr, "SQLParser: Error when initializing lexer!\n");
       return false;
     }
-    const char* text = sql.c_str();
+    std::string textString = _query->queryString().extract(_query->queryString().length());
+    textString = textString.substr(1, textString.size() - 2);
+
+    const char* text =  textString.c_str();
+    std::cout << "[SQLParser::parse::text] = " << text << std::endl;
     state = hsql__scan_string(text, scanner);
 
     // Parse the tokens.
     // If parsing fails, the result will contain an error object.
-    int ret = hsql_parse(result, scanner);
+    int ret = hsql_parse(this, scanner);
     bool success = (ret == 0);
-    result->setIsValid(success);
+    //result->setIsValid(success);
 
     hsql__delete_buffer(state, scanner);
     hsql_lex_destroy(scanner);
@@ -37,13 +45,13 @@ namespace hsql {
   }
 
   // static
-  bool SQLParser::parseSQLString(const char* sql, arangodb::aql::Parser* result) {
-    return parse(sql, result);
-  }
-
-  bool SQLParser::parseSQLString(const std::string& sql, arangodb::aql::Parser* result) {
-    return parse(sql, result);
-  }
+//  bool SQLParser::parseSQLString(const char* sql, arangodb::aql::Parser* result) {
+//    return parse(sql, result);
+//  }
+//
+//  bool SQLParser::parseSQLString(const std::string& sql, arangodb::aql::Parser* result) {
+//    return parse(sql, result);
+//  }
 
   // static
   bool SQLParser::tokenize(const std::string& sql, std::vector<int16_t>* tokens) {
@@ -76,5 +84,8 @@ namespace hsql {
     hsql_lex_destroy(scanner);
     return true;
   }
+
+    /// @brief push a temporary value on the parser's stack
+    void SQLParser::pushStack(void* value) { _stack.emplace_back(value); }
 
 } // namespace hsql

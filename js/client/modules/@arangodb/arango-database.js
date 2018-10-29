@@ -238,6 +238,7 @@ var helpArangoDatabase = arangosh.createHelpHeadline('ArangoDatabase (db) help')
   'Query / Transaction Functions:                                            ' + '\n' +
   '  _executeTransaction(<transaction>)    execute transaction               ' + '\n' +
   '  _query(<query>)                       execute AQL query                 ' + '\n' +
+  '  _sqlquery(<query>)                    execute SQL query                 ' + '\n' +
   '  _createStatement(<data>)              create and return AQL query       ' + '\n' +
   '                                                                          ' + '\n' +
   'View Functions:                                                           ' + '\n' +

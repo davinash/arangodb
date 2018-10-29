@@ -29,6 +29,7 @@
 #include "Basics/tri-strings.h"
 #include "Transaction/Context.h"
 #include "VocBase/AccessMode.h"
+#include <iostream>
 %}
 
 %union {
@@ -399,6 +400,7 @@ optional_with:
 
 queryStart:
     optional_with query {
+       std::cout << "AQL::queryStart Done" << std::endl;
     }
   ;
 
@@ -462,6 +464,7 @@ statement_block_statement:
 for_statement:
     T_FOR variable_name T_IN expression {
       // first open a new scope
+      std::cout << "AQL::for_statement" << std::endl;
       parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
 
       // now create an out variable for the FOR statement
@@ -469,6 +472,7 @@ for_statement:
       // or may not refer to the FOR's variable
       parser->pushStack(parser->ast()->createNodeVariable($2.value, $2.length, true));
     } for_options {
+      std::cout << "AQL::for_statement::1" << std::endl;
       // now we can handle the optional SEARCH condition and OPTIONS.
       AstNode* variableNode = static_cast<AstNode*>(parser->popStack());
       TRI_ASSERT(variableNode != nullptr);
@@ -479,6 +483,7 @@ for_statement:
       AstNode* options = nullptr;
 
       if ($6 != nullptr) {
+        std::cout << "AQL::for_statement::2" << std::endl;
         // we got a SEARCH and/or OPTIONS clause
         TRI_ASSERT($6->type == NODE_TYPE_ARRAY);
         TRI_ASSERT($6->numMembers() == 2);
@@ -494,6 +499,7 @@ for_statement:
       }
 
       if (search != nullptr) {
+        std::cout << "AQL::for_statement::3" << std::endl;
         // we got a SEARCH clause. this is always a view.
         node = parser->ast()->createNodeForView(variable, $4, search, options);
 
@@ -503,10 +509,12 @@ for_statement:
           parser->registerParseError(TRI_ERROR_QUERY_PARSE, "SEARCH condition used on non-view", yylloc.first_line, yylloc.first_column);
         }
       } else {
+        std::cout << "AQL::for_statement::4" << std::endl;
         node = parser->ast()->createNodeFor(variable, $4, options);
       }
-
+      std::cout << "AQL::for_statement::5" << std::endl;
       parser->ast()->addOperation(node);
+      std::cout << "AQL::for_statement::6" << std::endl;
     }
   | T_FOR traversal_statement {
     }
@@ -1094,21 +1102,27 @@ distinct_expression:
 
 expression:
     operator_unary {
+      std::cout << "AQL::expression::operator_unary" << std::endl;
       $$ = $1;
     }
   | operator_binary {
+      std::cout << "AQL::expression::operator_binary" << std::endl;
       $$ = $1;
     }
   | operator_ternary {
+      std::cout << "AQL::expression::operator_ternary" << std::endl;
       $$ = $1;
     }
   | value_literal {
+      std::cout << "AQL::expression::value_literal" << std::endl;
       $$ = $1;
     }
   | reference {
+      std::cout << "AQL::expression::reference" << std::endl;
       $$ = $1;
     }
   | expression T_RANGE expression {
+      std::cout << "AQL::expression::expression T_RANGE expression" << std::endl;
       $$ = parser->ast()->createNodeRange($1, $3);
     }
   ;
@@ -1334,9 +1348,11 @@ array_elements_list:
 
 for_options:
     /* empty */ {
+      std::cout << "AQL::for_option::Empty" << std::endl;
       $$ = nullptr;
     }
   | T_STRING expression {
+      std::cout << "AQL::for_option::1" << std::endl;
       if ($2 == nullptr) {
         ABORT_OOM
       }
@@ -1363,6 +1379,7 @@ for_options:
       $$ = node;
     }
   | T_STRING expression T_STRING expression {
+  std::cout << "AQL::for_option::2" << std::endl;
       if ($2 == nullptr) {
         ABORT_OOM
       }
@@ -1570,6 +1587,7 @@ graph_direction_steps:
 
 reference:
     T_STRING {
+      std::cout << "AQL::reference::T_STRING = " << $1.value << std::endl;
       // variable or collection or view
       auto ast = parser->ast();
       AstNode* node = nullptr;
@@ -1577,6 +1595,7 @@ reference:
       auto variable = ast->scopes()->getVariable($1.value, $1.length, true);
 
       if (variable == nullptr) {
+        std::cout << "AQL::reference::T_STRING1 = " << $1.value << std::endl;
         // variable does not exist
         // now try special variables
         if (ast->scopes()->canUseCurrentVariable() && strcmp($1.value, "CURRENT") == 0) {
@@ -1588,11 +1607,13 @@ reference:
       }
 
       if (variable != nullptr) {
+        std::cout << "AQL::reference::T_STRING2 = " << $1.value << std::endl;
         // variable alias exists, now use it
         node = ast->createNodeReference(variable);
       }
 
       if (node == nullptr) {
+      std::cout << "AQL::reference::T_STRING2 = " << $1.value << std::endl;
         // variable not found. so it must have been a collection or view
         auto const& resolver = parser->query()->resolver();
         node = ast->createNodeDataSource(resolver, $1.value, $1.length, arangodb::AccessMode::Type::READ, true, false);
@@ -1603,12 +1624,15 @@ reference:
       $$ = node;
     }
   | compound_value {
+     std::cout << "AQL::reference::compound_value" << std::endl;
       $$ = $1;
     }
   | bind_parameter {
+      std::cout << "AQL::reference::bind_parameter VALUE = " << $1 << std::endl;
       $$ = $1;
     }
   | function_call {
+      std::cout << "AQL::reference::function_call" << std::endl;
       $$ = $1;
 
       if ($$ == nullptr) {
@@ -1616,6 +1640,7 @@ reference:
       }
     }
   | T_OPEN expression T_CLOSE {
+      std::cout << "AQL::reference::T_OPEN expression T_CLOSE" << std::endl;
       if ($2->type == NODE_TYPE_EXPANSION) {
         // create a dummy passthru node that reduces and evaluates the expansion first
         // and the expansion on top of the stack won't be chained with any other expansions
@@ -1626,6 +1651,7 @@ reference:
       }
     }
   | T_OPEN {
+      std::cout << "AQL::reference::T_OPEN" << std::endl;
       parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_SUBQUERY);
       parser->ast()->startSubQuery();
     } query T_CLOSE {
@@ -1639,6 +1665,7 @@ reference:
       $$ = parser->ast()->createNodeReference(variableName);
     }
   | reference '.' T_STRING %prec REFERENCE {
+      std::cout << "AQL::reference::T_OPEN11" << std::endl;
       // named variable access, e.g. variable.reference
       if ($1->type == NODE_TYPE_EXPANSION) {
         // if left operand is an expansion already...
@@ -1654,6 +1681,7 @@ reference:
       }
     }
   | reference '.' bind_parameter %prec REFERENCE {
+      std::cout << "AQL::reference::T_OPEN12" << std::endl;
       // named variable access, e.g. variable.@reference
       if ($1->type == NODE_TYPE_EXPANSION) {
         // if left operand is an expansion already...
@@ -1668,6 +1696,7 @@ reference:
       }
     }
   | reference T_ARRAY_OPEN expression T_ARRAY_CLOSE %prec INDEXED {
+      std::cout << "AQL::reference::T_OPEN13" << std::endl;
       // indexed variable access, e.g. variable[index]
       if ($1->type == NODE_TYPE_EXPANSION) {
         // if left operand is an expansion already...
@@ -1682,6 +1711,7 @@ reference:
       }
     }
   | reference T_ARRAY_OPEN array_filter_operator {
+      std::cout << "AQL::reference::T_OPEN14" << std::endl;
       // variable expansion, e.g. variable[*], with optional FILTER, LIMIT and RETURN clauses
       if ($3 > 1 && $1->type == NODE_TYPE_EXPANSION) {
         // create a dummy passthru node that reduces and evaluates the expansion first

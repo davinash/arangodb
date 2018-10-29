@@ -16,10 +16,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 
 using namespace hsql;
 
-int yyerror(YYLTYPE* llocp, arangodb::aql::Parser* result, yyscan_t scanner, const char *msg) {
+int yyerror(YYLTYPE* llocp, hsql::SQLParser* parser, yyscan_t scanner, const char *msg) {
 	//result->setIsValid(false);
 	//result->setErrorDetails(strdup(msg), llocp->first_line, llocp->first_column);
 	return 0;
@@ -36,7 +37,7 @@ int yyerror(YYLTYPE* llocp, arangodb::aql::Parser* result, yyscan_t scanner, con
 // %code requires block
 
 #include "../sql/statements.h"
-#include "../SQLParserResult.h"
+#include "../SQLParser.h"
 #include "parser_typedef.h"
 #include "../../Aql/Parser.h"
 
@@ -86,8 +87,8 @@ int yyerror(YYLTYPE* llocp, arangodb::aql::Parser* result, yyscan_t scanner, con
 %lex-param   { yyscan_t scanner }
 
 // Define additional parameters for yyparse
-//%parse-param { hsql::SQLParserResult* result }
-%parse-param { arangodb::aql::Parser* parser }
+%parse-param { hsql::SQLParser* parser }
+//%parse-param { arangodb::aql::Parser* parser }
 %parse-param { yyscan_t scanner }
 
 
@@ -645,8 +646,9 @@ opt_all:
 
 select_clause:
 		SELECT opt_top opt_distinct select_list opt_from_clause opt_where opt_group {
-		    //parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
-
+		    std::cout << "SqlAql::bison_parser::select_clause" << std::endl;
+		    parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
+            std::cout << "SqlAql::bison_parser::select_clause::scope defined" << std::endl;
 			$$ = new SelectStatement();
 			$$->limit = $2;
 			$$->selectDistinct = $3;
@@ -873,10 +875,20 @@ between_expr:
 	;
 
 column_name:
-		IDENTIFIER { $$ = Expr::makeColumnRef($1); }
-	|	IDENTIFIER '.' IDENTIFIER { $$ = Expr::makeColumnRef($1, $3); }
-	|	'*' { $$ = Expr::makeStar(); }
-	|	IDENTIFIER '.' '*' { $$ = Expr::makeStar($1); }
+		IDENTIFIER {
+		  std::cout << "SQLParser::bison::column_name clause hit4 = " << $1 <<  std::endl;
+		  $$ = Expr::makeColumnRef($1);
+		  parser->pushStack(parser->ast()->createNodeVariable($1, true));
+		}
+	|	IDENTIFIER '.' IDENTIFIER {
+	            std::cout << "SQLParser::bison::column_name clause hit3" << std::endl;
+	            $$ = Expr::makeColumnRef($1, $3);
+	        }
+	|	'*' {
+	            std::cout << "SQLParser::bison::column_name clause hit2" << std::endl;$$ = Expr::makeStar();
+	            parser->pushStack(parser->ast()->createNodeVariable("ROW", 3, true));
+	        }
+	|	IDENTIFIER '.' '*' { std::cout << "SQLParser::bison::column_name clause hit1" << std::endl;$$ = Expr::makeStar($1); }
 	;
 
 literal:

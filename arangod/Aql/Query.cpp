@@ -58,6 +58,8 @@
 
 #include <velocypack/Iterator.h>
 
+#include "../SqlAql/SQLParser.h"
+
 #ifndef USE_PLAN_CACHE
 #undef USE_PLAN_CACHE
 #endif
@@ -76,7 +78,7 @@ Query::Query(
     QueryString const& queryString,
     std::shared_ptr<VPackBuilder> const& bindParameters,
     std::shared_ptr<VPackBuilder> const& options,
-    QueryPart part
+    QueryPart part, bool isSqlQuery
 )
     : _id(0),
       _resourceMonitor(),
@@ -98,7 +100,8 @@ Query::Query(
       _isModificationQuery(false),
       _preparedV8Context(false),
       _executionPhase(ExecutionPhase::INITIALIZE),
-      _sharedState(std::make_shared<SharedQueryState>()) {
+      _sharedState(std::make_shared<SharedQueryState>()),
+      _isSqlQuery(isSqlQuery) {
   if (_contextOwnedByExterior) {
     // copy transaction options from global state into our local query options
     TransactionState* state = transaction::V8Context::getParentState();
@@ -161,7 +164,7 @@ Query::Query(
     TRI_vocbase_t& vocbase,
     std::shared_ptr<VPackBuilder> const& queryStruct,
     std::shared_ptr<VPackBuilder> const& options,
-    QueryPart part
+    QueryPart part, bool isSqlQuery
 )
     : _id(0),
       _resourceMonitor(),
@@ -182,7 +185,8 @@ Query::Query(
       _isModificationQuery(false),
       _preparedV8Context(false),
       _executionPhase(ExecutionPhase::INITIALIZE),
-      _sharedState(std::make_shared<SharedQueryState>()) {
+      _sharedState(std::make_shared<SharedQueryState>()),
+      _isSqlQuery(isSqlQuery) {
   
   // populate query options
   if (_options != nullptr) {
@@ -461,11 +465,17 @@ ExecutionPlan* Query::preparePlan() {
   }
 
   if (!_queryString.empty()) {
-    Parser parser(this);
-
-    parser.parse(false);
-    // put in bind parameters
-    parser.ast()->injectBindParameters(_bindParameters, ctx->resolver());
+      if ( isSqlQuery()) {
+          hsql::SQLParser parser(this);
+          parser.parse(false);
+          // put in bind parameters
+          parser.ast()->injectBindParameters(_bindParameters, ctx->resolver());
+      } else {
+          Parser parser(this);
+          parser.parse(false);
+          // put in bind parameters
+          parser.ast()->injectBindParameters(_bindParameters, ctx->resolver());
+      }
   }
 
   TRI_ASSERT(_trx == nullptr);
@@ -1466,4 +1476,9 @@ graph::Graph const* Query::lookupGraphByName(std::string const& name) {
 /// @brief returns the next query id
 TRI_voc_tick_t Query::nextId() {
   return ::nextQueryId.fetch_add(1, std::memory_order_seq_cst);
+}
+
+/// @brief whether or not the query is SQL
+bool Query::isSqlQuery() const {
+    return _isSqlQuery;
 }

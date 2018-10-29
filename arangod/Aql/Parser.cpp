@@ -26,6 +26,7 @@
 #include "Aql/QueryResult.h"
 #include "Aql/ExecutionPlan.h"
 
+#include "../SqlAql/parser/bison_parser.h"
 #include <sstream>
 
 using namespace arangodb::aql;

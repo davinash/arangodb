@@ -48,12 +48,12 @@
 extern int hsql_debug;
 #endif
 /* "%code requires" blocks.  */
-#line 35 "bison_parser.y" /* yacc.c:1909  */
+#line 36 "bison_parser.y" /* yacc.c:1909  */
 
 // %code requires block
 
 #include "../sql/statements.h"
-#include "../SQLParserResult.h"
+#include "../SQLParser.h"
 #include "parser_typedef.h"
 #include "../../Aql/Parser.h"
 
@@ -225,7 +225,7 @@ extern int hsql_debug;
 
 union HSQL_STYPE
 {
-#line 97 "bison_parser.y" /* yacc.c:1909  */
+#line 98 "bison_parser.y" /* yacc.c:1909  */
 
 	double fval;
 	int64_t ival;
@@ -290,6 +290,6 @@ struct HSQL_LTYPE
 
 
 
-int hsql_parse (arangodb::aql::Parser* parser, yyscan_t scanner);
+int hsql_parse (hsql::SQLParser* parser, yyscan_t scanner);
 
 #endif /* !YY_HSQL_BISON_PARSER_H_INCLUDED  */
