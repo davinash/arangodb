@@ -6,6 +6,8 @@
 #include <string>
 #include <iostream>
 
+#include "../Aql/Scopes.h"
+
 namespace hsql {
 
     SQLParser::SQLParser(arangodb::aql::Query* query)
@@ -20,7 +22,12 @@ namespace hsql {
     yyscan_t scanner;
     YY_BUFFER_STATE state;
 
-    if (hsql_lex_init(&scanner)) {
+      // start main scope
+      auto scopes = _ast->scopes();
+      scopes->start(arangodb::aql::AQL_SCOPE_MAIN);
+
+
+      if (hsql_lex_init(&scanner)) {
       // Couldn't initialize the lexer.
       fprintf(stderr, "SQLParser: Error when initializing lexer!\n");
       return false;

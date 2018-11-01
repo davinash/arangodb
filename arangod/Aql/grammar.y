@@ -400,7 +400,6 @@ optional_with:
 
 queryStart:
     optional_with query {
-       std::cout << "AQL::queryStart Done" << std::endl;
     }
   ;
 
@@ -470,6 +469,7 @@ for_statement:
       // now create an out variable for the FOR statement
       // this prepares us to handle the optional SEARCH condition, which may
       // or may not refer to the FOR's variable
+      std::cout << "AQL::for_statement::$2 = " << $2.value << std::endl;
       parser->pushStack(parser->ast()->createNodeVariable($2.value, $2.length, true));
     } for_options {
       std::cout << "AQL::for_statement::1" << std::endl;
@@ -509,7 +509,7 @@ for_statement:
           parser->registerParseError(TRI_ERROR_QUERY_PARSE, "SEARCH condition used on non-view", yylloc.first_line, yylloc.first_column);
         }
       } else {
-        std::cout << "AQL::for_statement::4" << std::endl;
+        std::cout << "AQL::for_statement::4::variable = " << variable << std::endl;
         node = parser->ast()->createNodeFor(variable, $4, options);
       }
       std::cout << "AQL::for_statement::5" << std::endl;
@@ -924,6 +924,7 @@ limit_statement:
 
 return_statement:
     T_RETURN distinct_expression {
+      std::cout << "AQL::return_statement:: " << $2 << std::endl;
       auto node = parser->ast()->createNodeReturn($2);
       parser->ast()->addOperation(node);
       parser->ast()->scopes()->endNested();
@@ -1093,9 +1094,11 @@ distinct_expression:
         parser->registerParseError(TRI_ERROR_QUERY_PARSE, "cannot use DISTINCT modifier on top-level query element", yylloc.first_line, yylloc.first_column);
       }
     } expression {
+      std::cout << "AQL::distinct_expression::expression = " << $3 << std::endl;
       $$ = parser->ast()->createNodeDistinct($3);
     }
   | expression {
+      std::cout << "AQL::distinct_expression::expression 11 = " << $1 << std::endl;
       $$ = $1;
     }
   ;
@@ -1118,7 +1121,7 @@ expression:
       $$ = $1;
     }
   | reference {
-      std::cout << "AQL::expression::reference" << std::endl;
+      std::cout << "AQL::expression::reference " << std::endl;
       $$ = $1;
     }
   | expression T_RANGE expression {
@@ -1595,25 +1598,27 @@ reference:
       auto variable = ast->scopes()->getVariable($1.value, $1.length, true);
 
       if (variable == nullptr) {
-        std::cout << "AQL::reference::T_STRING1 = " << $1.value << std::endl;
+        std::cout << "AQL::reference::T_STRING [ variable == nullptr ]  = " << $1.value << std::endl;
         // variable does not exist
         // now try special variables
         if (ast->scopes()->canUseCurrentVariable() && strcmp($1.value, "CURRENT") == 0) {
+        std::cout << "AQL::reference::T_STRING [ variable == nullptr 1 ]  = " << $1.value << std::endl;
           variable = ast->scopes()->getCurrentVariable();
         }
         else if (strcmp($1.value, Variable::NAME_CURRENT) == 0) {
+          std::cout << "AQL::reference::T_STRING [ variable == nullptr 2 ]  = " << $1.value << std::endl;
           variable = ast->scopes()->getCurrentVariable();
         }
       }
 
       if (variable != nullptr) {
-        std::cout << "AQL::reference::T_STRING2 = " << $1.value << std::endl;
+        std::cout << "AQL::reference::T_STRING [ variable != nullptr ] = " << $1.value << std::endl;
         // variable alias exists, now use it
         node = ast->createNodeReference(variable);
       }
 
       if (node == nullptr) {
-      std::cout << "AQL::reference::T_STRING2 = " << $1.value << std::endl;
+        std::cout << "AQL::reference::T_STRING [ node == nullptr ] = " << $1.value << std::endl;
         // variable not found. so it must have been a collection or view
         auto const& resolver = parser->query()->resolver();
         node = ast->createNodeDataSource(resolver, $1.value, $1.length, arangodb::AccessMode::Type::READ, true, false);

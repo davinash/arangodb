@@ -587,12 +587,6 @@ AstNode* Ast::createNodeAssign(char const* variableName, size_t nameLength,
   return node;
 }
 
-
-/// @brief create an AST variable node
-AstNode* Ast::createNodeVariable(char const* name, bool isUserDefined) {
-  return createNodeVariable(name, strlen(name) + 1, isUserDefined);
-}
-
 /// @brief create an AST variable node
 AstNode* Ast::createNodeVariable(char const* name, size_t nameLength,
                                  bool isUserDefined) {

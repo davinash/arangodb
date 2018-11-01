@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.0.5.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -48,14 +48,19 @@
 extern int hsql_debug;
 #endif
 /* "%code requires" blocks.  */
-#line 36 "bison_parser.y" /* yacc.c:1909  */
+#line 36 "bison_parser.y" /* yacc.c:1910  */
 
 // %code requires block
 
-#include "../sql/statements.h"
 #include "../SQLParser.h"
 #include "parser_typedef.h"
+
+#include "../../Aql/Aggregator.h"
+#include "../../Aql/AstNode.h"
+#include "../../Aql/Function.h"
 #include "../../Aql/Parser.h"
+#include "../../Aql/Quantifier.h"
+#include "../../Aql/Query.h"
 
 // Auto update column and line number
 #define YY_USER_ACTION \
@@ -73,17 +78,17 @@ extern int hsql_debug;
 				} \
 		}
 
-#line 77 "bison_parser.h" /* yacc.c:1909  */
+#line 82 "bison_parser.h" /* yacc.c:1910  */
 
 /* Token type.  */
 #ifndef HSQL_TOKENTYPE
 # define HSQL_TOKENTYPE
   enum hsql_tokentype
   {
-    SQL_IDENTIFIER = 258,
-    SQL_STRING = 259,
-    SQL_FLOATVAL = 260,
-    SQL_INTVAL = 261,
+    SQL_INTVAL = 258,
+    SQL_IDENTIFIER = 259,
+    SQL_STRING = 260,
+    SQL_FLOATVAL = 261,
     SQL_DEALLOCATE = 262,
     SQL_PARAMETERS = 263,
     SQL_INTERSECT = 264,
@@ -225,48 +230,23 @@ extern int hsql_debug;
 
 union HSQL_STYPE
 {
-#line 98 "bison_parser.y" /* yacc.c:1909  */
+#line 98 "bison_parser.y" /* yacc.c:1910  */
 
-	double fval;
-	int64_t ival;
-	char* sval;
-	uintmax_t uval;
-	bool bval;
+  arangodb::aql::AstNode*  node;
+  double fval;
+  int64_t ival;
+  char* sval;
+  uintmax_t uval;
+  bool bval;
 
-	hsql::SQLStatement* statement;
-	hsql::SelectStatement* 	select_stmt;
-	hsql::ImportStatement* 	import_stmt;
-	hsql::CreateStatement* 	create_stmt;
-	hsql::InsertStatement* 	insert_stmt;
-	hsql::DeleteStatement* 	delete_stmt;
-	hsql::UpdateStatement* 	update_stmt;
-	hsql::DropStatement*   	drop_stmt;
-	hsql::PrepareStatement* prep_stmt;
-	hsql::ExecuteStatement* exec_stmt;
-	hsql::ShowStatement*    show_stmt;
+  struct {
+    char*                  value;
+    size_t                 length;
+  }                        strval;
+  bool                     boolval;
+  int64_t                  intval;
 
-	hsql::TableName table_name;
-	hsql::TableRef* table;
-	hsql::Expr* expr;
-	hsql::OrderDescription* order;
-	hsql::OrderType order_type;
-	hsql::DatetimeField datetime_field;
-	hsql::LimitDescription* limit;
-	hsql::ColumnDefinition* column_t;
-	hsql::GroupByDescription* group_t;
-	hsql::UpdateClause* update_t;
-	hsql::Alias* alias_t;
-
-	std::vector<hsql::SQLStatement*>* stmt_vec;
-
-	std::vector<char*>* str_vec;
-	std::vector<hsql::TableRef*>* table_vec;
-	std::vector<hsql::ColumnDefinition*>* column_vec;
-	std::vector<hsql::UpdateClause*>* update_vec;
-	std::vector<hsql::Expr*>* expr_vec;
-	std::vector<hsql::OrderDescription*>* order_vec;
-
-#line 270 "bison_parser.h" /* yacc.c:1909  */
+#line 250 "bison_parser.h" /* yacc.c:1910  */
 };
 
 typedef union HSQL_STYPE HSQL_STYPE;

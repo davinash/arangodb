@@ -2954,10 +2954,10 @@ YY_BUFFER_STATE Aql_scan_bytes  (yyconst char * yybytes, int  _yybytes_len , yys
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	yy_size_t i;
+	int i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
-	n = (yy_size_t) _yybytes_len + 2;
+	n = (yy_size_t) (_yybytes_len + 2);
 	buf = (char *) Aqlalloc(n ,yyscanner );
 	if ( ! buf )
 		YY_FATAL_ERROR( "out of dynamic memory in Aql_scan_bytes()" );

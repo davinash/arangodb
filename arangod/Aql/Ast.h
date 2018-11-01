@@ -225,9 +225,6 @@ class Ast {
   /// @brief create an AST variable node
   AstNode* createNodeVariable(char const* name, size_t nameLength, bool isUserDefined);
 
-  /// @brief create an AST variable node
-  AstNode* createNodeVariable(char const* name, bool isUserDefined);
-  
   /// @brief create an AST datasource
   /// this function will return either an AST collection or an AST view node
   /// if failIfDoesNotExist is true, the function will throw if the specified
