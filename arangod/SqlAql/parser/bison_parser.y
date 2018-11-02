@@ -627,6 +627,9 @@ select_no_paren:
 				delete $$->limit;
 				$$->limit = $5;
 			}
+
+			// Handle the returns here
+
 		}
 	;
 
@@ -656,20 +659,12 @@ select_clause:
 			$$->groupBy = $7;
 
 			parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
-			parser->pushStack(parser->ast()->createNodeVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true));
-
-			arangodb::aql::AstNode* variableNode = static_cast<arangodb::aql::AstNode*>(parser->popStack());
+			arangodb::aql::AstNode* variableNode = parser->ast()->createNodeVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true);
             TRI_ASSERT(variableNode != nullptr);
             arangodb::aql::Variable* variable = static_cast<arangodb::aql::Variable*>(variableNode->getData());
 
-            arangodb::aql::AstNode* node = nullptr;
-
-            arangodb::aql::AstNode* options = nullptr;
-            node = parser->ast()->createNodeFor(variable, $5->node, options);
-
+            arangodb::aql::AstNode* node = parser->ast()->createNodeFor(variable, $5->node, nullptr);
             parser->ast()->addOperation(node);
-
-            // Handle the return part of the AQL AST.
 		}
 	;
 
