@@ -125,7 +125,7 @@ extern int Aqldebug;
 
 union YYSTYPE
 {
-#line 35 "Aql/grammar.y" /* yacc.c:1910  */
+#line 44 "Aql/grammar.y" /* yacc.c:1910  */
 
   arangodb::aql::AstNode*  node;
   struct {

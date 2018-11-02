@@ -52,15 +52,11 @@ extern int hsql_debug;
 
 // %code requires block
 
+#include "../sql/statements.h"
 #include "../SQLParser.h"
 #include "parser_typedef.h"
-
-#include "../../Aql/Aggregator.h"
-#include "../../Aql/AstNode.h"
-#include "../../Aql/Function.h"
 #include "../../Aql/Parser.h"
-#include "../../Aql/Quantifier.h"
-#include "../../Aql/Query.h"
+#include "../../Aql/AstNode.h"
 
 // Auto update column and line number
 #define YY_USER_ACTION \
@@ -78,17 +74,17 @@ extern int hsql_debug;
 				} \
 		}
 
-#line 82 "bison_parser.h" /* yacc.c:1910  */
+#line 78 "bison_parser.h" /* yacc.c:1910  */
 
 /* Token type.  */
 #ifndef HSQL_TOKENTYPE
 # define HSQL_TOKENTYPE
   enum hsql_tokentype
   {
-    SQL_INTVAL = 258,
-    SQL_IDENTIFIER = 259,
-    SQL_STRING = 260,
-    SQL_FLOATVAL = 261,
+    SQL_IDENTIFIER = 258,
+    SQL_STRING = 259,
+    SQL_FLOATVAL = 260,
+    SQL_INTVAL = 261,
     SQL_DEALLOCATE = 262,
     SQL_PARAMETERS = 263,
     SQL_INTERSECT = 264,
@@ -230,23 +226,48 @@ extern int hsql_debug;
 
 union HSQL_STYPE
 {
-#line 98 "bison_parser.y" /* yacc.c:1910  */
+#line 99 "bison_parser.y" /* yacc.c:1910  */
 
-  arangodb::aql::AstNode*  node;
-  double fval;
-  int64_t ival;
-  char* sval;
-  uintmax_t uval;
-  bool bval;
+	double fval;
+	int64_t ival;
+	char* sval;
+	uintmax_t uval;
+	bool bval;
 
-  struct {
-    char*                  value;
-    size_t                 length;
-  }                        strval;
-  bool                     boolval;
-  int64_t                  intval;
+	hsql::SQLStatement* statement;
+	hsql::SelectStatement* 	select_stmt;
+	hsql::ImportStatement* 	import_stmt;
+	hsql::CreateStatement* 	create_stmt;
+	hsql::InsertStatement* 	insert_stmt;
+	hsql::DeleteStatement* 	delete_stmt;
+	hsql::UpdateStatement* 	update_stmt;
+	hsql::DropStatement*   	drop_stmt;
+	hsql::PrepareStatement* prep_stmt;
+	hsql::ExecuteStatement* exec_stmt;
+	hsql::ShowStatement*    show_stmt;
 
-#line 250 "bison_parser.h" /* yacc.c:1910  */
+	hsql::TableName table_name;
+	hsql::TableRef* table;
+	hsql::Expr* expr;
+	hsql::OrderDescription* order;
+	hsql::OrderType order_type;
+	hsql::DatetimeField datetime_field;
+	hsql::LimitDescription* limit;
+	hsql::ColumnDefinition* column_t;
+	hsql::GroupByDescription* group_t;
+	hsql::UpdateClause* update_t;
+	hsql::Alias* alias_t;
+
+	std::vector<hsql::SQLStatement*>* stmt_vec;
+
+	std::vector<char*>* str_vec;
+	std::vector<hsql::TableRef*>* table_vec;
+	std::vector<hsql::ColumnDefinition*>* column_vec;
+	std::vector<hsql::UpdateClause*>* update_vec;
+	std::vector<hsql::Expr*>* expr_vec;
+	std::vector<hsql::OrderDescription*>* order_vec;
+
+#line 271 "bison_parser.h" /* yacc.c:1910  */
 };
 
 typedef union HSQL_STYPE HSQL_STYPE;

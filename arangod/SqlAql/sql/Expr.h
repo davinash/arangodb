@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <memory>
 #include <vector>
+#include <arangod/Aql/AstNode.h>
 
 namespace hsql {
   struct SelectStatement;
@@ -105,6 +106,8 @@ namespace hsql {
 
     OperatorType opType;
     bool distinct;
+
+    arangodb::aql::AstNode* node;
 
     // Convenience accessor methods.
 

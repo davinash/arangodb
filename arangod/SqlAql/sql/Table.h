@@ -4,6 +4,10 @@
 #include "Expr.h"
 #include <stdio.h>
 #include <vector>
+#include <arangod/Aql/AstNode.h>
+
+
+
 
 namespace hsql {
 
@@ -42,6 +46,7 @@ namespace hsql {
     char* schema;
     char* name;
     Alias* alias;
+    arangodb::aql::AstNode* node;
 
     SelectStatement* select;
     std::vector<TableRef*>* list;

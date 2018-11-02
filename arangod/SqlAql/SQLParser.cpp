@@ -95,4 +95,37 @@ namespace hsql {
     /// @brief push a temporary value on the parser's stack
     void SQLParser::pushStack(void* value) { _stack.emplace_back(value); }
 
+    /// @brief pop a temporary value from the parser's stack
+    void* SQLParser::popStack() {
+      TRI_ASSERT(!_stack.empty());
+
+      void* result = _stack.back();
+      _stack.pop_back();
+      return result;
+    }
+
+/// @brief push an AstNode into the object element on top of the stack
+    void SQLParser::pushObjectElement(char const* attributeName, size_t nameLength,
+                                      arangodb::aql::AstNode* node) {
+      auto object = static_cast<arangodb::aql::AstNode*>(peekStack());
+      TRI_ASSERT(object->type == arangodb::aql::NODE_TYPE_OBJECT);
+      auto element = _ast->createNodeObjectElement(attributeName, nameLength, node);
+      object->addMember(element);
+    }
+
+/// @brief push an AstNode into the object element on top of the stack
+    void SQLParser::pushObjectElement(arangodb::aql::AstNode* attributeName, arangodb::aql::AstNode* node) {
+      auto object = static_cast<arangodb::aql::AstNode*>(peekStack());
+      TRI_ASSERT(object->type == arangodb::aql::NODE_TYPE_OBJECT);
+      auto element = _ast->createNodeCalculatedObjectElement(attributeName, node);
+      object->addMember(element);
+    }
+
+    /// @brief peek at a temporary value from the parser's stack
+    void* SQLParser::peekStack() {
+      TRI_ASSERT(!_stack.empty());
+
+      return _stack.back();
+    }
+
 } // namespace hsql

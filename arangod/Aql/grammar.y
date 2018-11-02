@@ -20,6 +20,15 @@
 // dynamically memory allocation by Bison, but make it use alloca.
 #define YYSTACK_USE_ALLOCA 1
 
+#define DEBUG_BUILD_AQL 0
+
+#ifdef DEBUG_BUILD_AQL
+#define DEBUG_AQL_GRAMMAR(x) do { std::cout << x << std::endl; } while (0)
+#else
+#define DEBUG_AQL_GRAMMAR(x)
+#endif
+
+
 #include "Aql/Aggregator.h"
 #include "Aql/AstNode.h"
 #include "Aql/Function.h"
@@ -405,11 +414,13 @@ queryStart:
 
 query:
     optional_statement_block_statements final_statement {
+        std::cout << "AQL::final_statement::final_statement::DONE" << std::endl;
     }
   ;
 
 final_statement:
     return_statement {
+        std::cout << "AQL::final_statement::return_statement::DONE" << std::endl;
     }
   | remove_statement {
       parser->ast()->scopes()->endNested();
@@ -463,16 +474,16 @@ statement_block_statement:
 for_statement:
     T_FOR variable_name T_IN expression {
       // first open a new scope
-      std::cout << "AQL::for_statement" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_statement" );
       parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
 
       // now create an out variable for the FOR statement
       // this prepares us to handle the optional SEARCH condition, which may
       // or may not refer to the FOR's variable
-      std::cout << "AQL::for_statement::$2 = " << $2.value << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_statement::$2 = " << $2.value );
       parser->pushStack(parser->ast()->createNodeVariable($2.value, $2.length, true));
     } for_options {
-      std::cout << "AQL::for_statement::1" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_statement::1" );
       // now we can handle the optional SEARCH condition and OPTIONS.
       AstNode* variableNode = static_cast<AstNode*>(parser->popStack());
       TRI_ASSERT(variableNode != nullptr);
@@ -483,7 +494,7 @@ for_statement:
       AstNode* options = nullptr;
 
       if ($6 != nullptr) {
-        std::cout << "AQL::for_statement::2" << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::for_statement::2" );
         // we got a SEARCH and/or OPTIONS clause
         TRI_ASSERT($6->type == NODE_TYPE_ARRAY);
         TRI_ASSERT($6->numMembers() == 2);
@@ -499,7 +510,7 @@ for_statement:
       }
 
       if (search != nullptr) {
-        std::cout << "AQL::for_statement::3" << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::for_statement::3" );
         // we got a SEARCH clause. this is always a view.
         node = parser->ast()->createNodeForView(variable, $4, search, options);
 
@@ -509,12 +520,12 @@ for_statement:
           parser->registerParseError(TRI_ERROR_QUERY_PARSE, "SEARCH condition used on non-view", yylloc.first_line, yylloc.first_column);
         }
       } else {
-        std::cout << "AQL::for_statement::4::variable = " << variable << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::for_statement::4::variable = " << variable );
         node = parser->ast()->createNodeFor(variable, $4, options);
       }
-      std::cout << "AQL::for_statement::5" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_statement::5" );
       parser->ast()->addOperation(node);
-      std::cout << "AQL::for_statement::6" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_statement::6" );
     }
   | T_FOR traversal_statement {
     }
@@ -924,7 +935,7 @@ limit_statement:
 
 return_statement:
     T_RETURN distinct_expression {
-      std::cout << "AQL::return_statement:: " << $2 << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::return_statement:: " << $2 );
       auto node = parser->ast()->createNodeReturn($2);
       parser->ast()->addOperation(node);
       parser->ast()->scopes()->endNested();
@@ -1094,38 +1105,38 @@ distinct_expression:
         parser->registerParseError(TRI_ERROR_QUERY_PARSE, "cannot use DISTINCT modifier on top-level query element", yylloc.first_line, yylloc.first_column);
       }
     } expression {
-      std::cout << "AQL::distinct_expression::expression = " << $3 << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::distinct_expression::expression = " << $3 );
       $$ = parser->ast()->createNodeDistinct($3);
     }
   | expression {
-      std::cout << "AQL::distinct_expression::expression 11 = " << $1 << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::distinct_expression::expression 11 = " << $1 );
       $$ = $1;
     }
   ;
 
 expression:
     operator_unary {
-      std::cout << "AQL::expression::operator_unary" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::expression::operator_unary" );
       $$ = $1;
     }
   | operator_binary {
-      std::cout << "AQL::expression::operator_binary" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::expression::operator_binary" );
       $$ = $1;
     }
   | operator_ternary {
-      std::cout << "AQL::expression::operator_ternary" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::expression::operator_ternary" );
       $$ = $1;
     }
   | value_literal {
-      std::cout << "AQL::expression::value_literal" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::expression::value_literal" );
       $$ = $1;
     }
   | reference {
-      std::cout << "AQL::expression::reference " << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::expression::reference " );
       $$ = $1;
     }
   | expression T_RANGE expression {
-      std::cout << "AQL::expression::expression T_RANGE expression" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::expression::expression T_RANGE expression" );
       $$ = parser->ast()->createNodeRange($1, $3);
     }
   ;
@@ -1317,9 +1328,11 @@ function_arguments_list:
 
 compound_value:
     array {
+      std::cout << "AQL::compound_value::array" << std::endl;
       $$ = $1;
     }
   | object {
+      std::cout << "AQL::compound_value::object" << std::endl;
       $$ = $1;
     }
   ;
@@ -1351,11 +1364,11 @@ array_elements_list:
 
 for_options:
     /* empty */ {
-      std::cout << "AQL::for_option::Empty" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_option::Empty" );
       $$ = nullptr;
     }
   | T_STRING expression {
-      std::cout << "AQL::for_option::1" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::for_option::1" );
       if ($2 == nullptr) {
         ABORT_OOM
       }
@@ -1382,7 +1395,7 @@ for_options:
       $$ = node;
     }
   | T_STRING expression T_STRING expression {
-  std::cout << "AQL::for_option::2" << std::endl;
+  DEBUG_AQL_GRAMMAR ( "AQL::for_option::2" );
       if ($2 == nullptr) {
         ABORT_OOM
       }
@@ -1420,9 +1433,11 @@ options:
 
 object:
     T_OBJECT_OPEN {
+      std::cout << "AQL::object::T_OBJECT_OPEN" << std::endl;
       auto node = parser->ast()->createNodeObject();
       parser->pushStack(node);
     } optional_object_elements T_OBJECT_CLOSE {
+      std::cout << "AQL::object::T_OBJECT_CLOSE" << std::endl;
       $$ = static_cast<AstNode*>(parser->popStack());
     }
   ;
@@ -1436,6 +1451,7 @@ optional_object_elements:
 
 object_elements_list:
     object_element {
+        std::cout << "AQL::object::object_element::DONE" << std::endl;
     }
   | object_elements_list T_COMMA object_element {
     }
@@ -1443,11 +1459,13 @@ object_elements_list:
 
 object_element:
     T_STRING {
+       std::cout << "AQL::object::object_element::T_STRING::1::" << $1.value << std::endl;
       // attribute-name-only (comparable to JS enhanced object literals, e.g. { foo, bar })
       auto ast = parser->ast();
       auto variable = ast->scopes()->getVariable($1.value, $1.length, true);
 
       if (variable == nullptr) {
+        std::cout << "AQL::object::object_element::T_STRING::2" << std::endl;
         // variable does not exist
         parser->registerParseError(TRI_ERROR_QUERY_VARIABLE_NAME_UNKNOWN, "use of unknown variable '%s' in object literal", $1.value, yylloc.first_line, yylloc.first_column);
       }
@@ -1455,13 +1473,16 @@ object_element:
       // create a reference to the variable
       auto node = ast->createNodeReference(variable);
       parser->pushObjectElement($1.value, $1.length, node);
+      std::cout << "AQL::object::object_element::T_STRING::3" << std::endl;
     }
   | object_element_name T_COLON expression {
       // attribute-name : attribute-value
+      std::cout << "AQL::object::object_element::T_STRING::4" << std::endl;
       parser->pushObjectElement($1.value, $1.length, $3);
     }
   | T_PARAMETER T_COLON expression {
       // bind-parameter : attribute-value
+      std::cout << "AQL::object::object_element::T_STRING::5" << std::endl;
       if ($1.length < 1 || $1.value[0] == '@') {
         parser->registerParseError(TRI_ERROR_QUERY_BIND_PARAMETER_TYPE, TRI_errno_string(TRI_ERROR_QUERY_BIND_PARAMETER_TYPE), $1.value, yylloc.first_line, yylloc.first_column);
       }
@@ -1590,7 +1611,7 @@ graph_direction_steps:
 
 reference:
     T_STRING {
-      std::cout << "AQL::reference::T_STRING = " << $1.value << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_STRING = " << $1.value );
       // variable or collection or view
       auto ast = parser->ast();
       AstNode* node = nullptr;
@@ -1598,27 +1619,27 @@ reference:
       auto variable = ast->scopes()->getVariable($1.value, $1.length, true);
 
       if (variable == nullptr) {
-        std::cout << "AQL::reference::T_STRING [ variable == nullptr ]  = " << $1.value << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::reference::T_STRING [ variable == nullptr ]  = " << $1.value );
         // variable does not exist
         // now try special variables
         if (ast->scopes()->canUseCurrentVariable() && strcmp($1.value, "CURRENT") == 0) {
-        std::cout << "AQL::reference::T_STRING [ variable == nullptr 1 ]  = " << $1.value << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::reference::T_STRING [ variable == nullptr 1 ]  = " << $1.value );
           variable = ast->scopes()->getCurrentVariable();
         }
         else if (strcmp($1.value, Variable::NAME_CURRENT) == 0) {
-          std::cout << "AQL::reference::T_STRING [ variable == nullptr 2 ]  = " << $1.value << std::endl;
+          DEBUG_AQL_GRAMMAR ( "AQL::reference::T_STRING [ variable == nullptr 2 ]  = " << $1.value );
           variable = ast->scopes()->getCurrentVariable();
         }
       }
 
       if (variable != nullptr) {
-        std::cout << "AQL::reference::T_STRING [ variable != nullptr ] = " << $1.value << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::reference::T_STRING [ variable != nullptr ] = " << $1.value );
         // variable alias exists, now use it
         node = ast->createNodeReference(variable);
       }
 
       if (node == nullptr) {
-        std::cout << "AQL::reference::T_STRING [ node == nullptr ] = " << $1.value << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::reference::T_STRING [ node == nullptr ] = " << $1.value );
         // variable not found. so it must have been a collection or view
         auto const& resolver = parser->query()->resolver();
         node = ast->createNodeDataSource(resolver, $1.value, $1.length, arangodb::AccessMode::Type::READ, true, false);
@@ -1629,15 +1650,15 @@ reference:
       $$ = node;
     }
   | compound_value {
-     std::cout << "AQL::reference::compound_value" << std::endl;
+     DEBUG_AQL_GRAMMAR ( "AQL::reference::compound_value" );
       $$ = $1;
     }
   | bind_parameter {
-      std::cout << "AQL::reference::bind_parameter VALUE = " << $1 << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::bind_parameter VALUE = " << $1 );
       $$ = $1;
     }
   | function_call {
-      std::cout << "AQL::reference::function_call" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::function_call" );
       $$ = $1;
 
       if ($$ == nullptr) {
@@ -1645,7 +1666,7 @@ reference:
       }
     }
   | T_OPEN expression T_CLOSE {
-      std::cout << "AQL::reference::T_OPEN expression T_CLOSE" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_OPEN expression T_CLOSE" );
       if ($2->type == NODE_TYPE_EXPANSION) {
         // create a dummy passthru node that reduces and evaluates the expansion first
         // and the expansion on top of the stack won't be chained with any other expansions
@@ -1656,7 +1677,7 @@ reference:
       }
     }
   | T_OPEN {
-      std::cout << "AQL::reference::T_OPEN" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_OPEN" );
       parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_SUBQUERY);
       parser->ast()->startSubQuery();
     } query T_CLOSE {
@@ -1670,7 +1691,7 @@ reference:
       $$ = parser->ast()->createNodeReference(variableName);
     }
   | reference '.' T_STRING %prec REFERENCE {
-      std::cout << "AQL::reference::T_OPEN11" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_OPEN11" );
       // named variable access, e.g. variable.reference
       if ($1->type == NODE_TYPE_EXPANSION) {
         // if left operand is an expansion already...
@@ -1686,7 +1707,7 @@ reference:
       }
     }
   | reference '.' bind_parameter %prec REFERENCE {
-      std::cout << "AQL::reference::T_OPEN12" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_OPEN12" );
       // named variable access, e.g. variable.@reference
       if ($1->type == NODE_TYPE_EXPANSION) {
         // if left operand is an expansion already...
@@ -1701,7 +1722,7 @@ reference:
       }
     }
   | reference T_ARRAY_OPEN expression T_ARRAY_CLOSE %prec INDEXED {
-      std::cout << "AQL::reference::T_OPEN13" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_OPEN13" );
       // indexed variable access, e.g. variable[index]
       if ($1->type == NODE_TYPE_EXPANSION) {
         // if left operand is an expansion already...
@@ -1716,7 +1737,7 @@ reference:
       }
     }
   | reference T_ARRAY_OPEN array_filter_operator {
-      std::cout << "AQL::reference::T_OPEN14" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::reference::T_OPEN14" );
       // variable expansion, e.g. variable[*], with optional FILTER, LIMIT and RETURN clauses
       if ($3 > 1 && $1->type == NODE_TYPE_EXPANSION) {
         // create a dummy passthru node that reduces and evaluates the expansion first

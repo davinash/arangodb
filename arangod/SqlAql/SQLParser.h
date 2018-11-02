@@ -39,6 +39,16 @@ namespace hsql {
 
       /// @brief push a temporary value on the parser's stack
       void pushStack(void*);
+      /// @brief pop a temporary value from the parser's stack
+      void* popStack();
+      /// @brief push an AstNode into the object element on top of the stack
+      void pushObjectElement(char const*, size_t, arangodb::aql::AstNode*);
+
+      /// @brief push an AstNode into the object element on top of the stack
+      void pushObjectElement(arangodb::aql::AstNode*, arangodb::aql::AstNode*);
+
+/// @brief peek at a temporary value from the parser's stack
+      void* peekStack();
   private:
       /// @brief the query
       arangodb::aql::Query* _query;
