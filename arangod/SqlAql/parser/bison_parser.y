@@ -41,6 +41,7 @@ int yyerror(YYLTYPE* llocp, hsql::SQLParser* parser, yyscan_t scanner, const cha
 #include "parser_typedef.h"
 #include "../../Aql/Parser.h"
 #include "../../Aql/AstNode.h"
+#include "../aql/SQLParseTreeToAQLAst.h"
 
 // Auto update column and line number
 #define YY_USER_ACTION \
@@ -89,7 +90,6 @@ int yyerror(YYLTYPE* llocp, hsql::SQLParser* parser, yyscan_t scanner, const cha
 
 // Define additional parameters for yyparse
 %parse-param { hsql::SQLParser* parser }
-//%parse-param { arangodb::aql::Parser* parser }
 %parse-param { yyscan_t scanner }
 
 
@@ -576,11 +576,13 @@ update_clause:
 
 select_statement:
 		select_with_paren
-	|	select_no_paren
+	|	select_no_paren {
+	        $$ = $1;
+            SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, $$);
+            pConverter->generateAQLAST();
+
+	}
 	|	select_with_paren set_operator select_paren_or_clause opt_order opt_limit {
-			// TODO: allow multiple unions (through linked list)
-			// TODO: capture type of set_operator
-			// TODO: might overwrite order and limit of first select here
 			$$ = $1;
 			$$->unionSelect = $3;
 			$$->order = $4;
@@ -615,9 +617,6 @@ select_no_paren:
 			}
 		}
 	|	select_clause set_operator select_paren_or_clause opt_order opt_limit {
-			// TODO: allow multiple unions (through linked list)
-			// TODO: capture type of set_operator
-			// TODO: might overwrite order and limit of first select here
 			$$ = $1;
 			$$->unionSelect = $3;
 			$$->order = $4;
@@ -627,9 +626,6 @@ select_no_paren:
 				delete $$->limit;
 				$$->limit = $5;
 			}
-
-			// Handle the returns here
-
 		}
 	;
 
@@ -657,14 +653,6 @@ select_clause:
 			$$->fromTable = $5;
 			$$->whereClause = $6;
 			$$->groupBy = $7;
-
-			parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
-			arangodb::aql::AstNode* variableNode = parser->ast()->createNodeVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true);
-            TRI_ASSERT(variableNode != nullptr);
-            arangodb::aql::Variable* variable = static_cast<arangodb::aql::Variable*>(variableNode->getData());
-
-            arangodb::aql::AstNode* node = parser->ast()->createNodeFor(variable, $5->node, nullptr);
-            parser->ast()->addOperation(node);
 		}
 	;
 
@@ -682,34 +670,7 @@ opt_from_clause:
     |   /* empty */  { $$ = nullptr; }
 
 from_clause:
-		FROM table_ref {
-		     $$ = $2;
-		     auto ast = parser->ast();
-		     arangodb::aql::AstNode* node = nullptr;
-		     auto variable = ast->scopes()->getVariable(TRI_CHAR_LENGTH_PAIR($$->getName()), true);
-		     if (variable == nullptr) {
-		        if (ast->scopes()->canUseCurrentVariable() && strcmp($$->getName(), "CURRENT") == 0) {
-                    variable = ast->scopes()->getCurrentVariable();
-                }
-                else if (strcmp($$->getName(), arangodb::aql::Variable::NAME_CURRENT) == 0) {
-                    variable = ast->scopes()->getCurrentVariable();
-                }
-		     } // if (variable == nullptr)
-
-             if (variable != nullptr) {
-                // variable alias exists, now use it
-                node = ast->createNodeReference(variable);
-             }
-             if (node == nullptr) {
-                // variable not found. so it must have been a collection or view
-                auto const& resolver = parser->query()->resolver();
-                node = ast->createNodeDataSource(resolver, TRI_CHAR_LENGTH_PAIR($$->getName()),
-                              arangodb::AccessMode::Type::READ, true, false);
-             }
-             TRI_ASSERT(node != nullptr);
-             $$->node = node;
-		     std::cout << "-----> SQL::from_clause::FROM table_ref::$$ = " << $$ << std::endl;
-        }
+		FROM table_ref { $$ = $2; }
 	;
 
 
@@ -814,10 +775,7 @@ operand:
 	;
 
 scalar_expr:
-		column_name {
-		    $$ = $1;
-		    $$->node = static_cast<arangodb::aql::AstNode*>(parser->popStack());
-		}
+		column_name
 	|	literal
 	;
 
@@ -916,22 +874,7 @@ between_expr:
 column_name:
 		IDENTIFIER { $$ = Expr::makeColumnRef($1); }
 	|	IDENTIFIER '.' IDENTIFIER { $$ = Expr::makeColumnRef($1, $3); }
-	|	'*' {
-	    std::cout << "SQL::column_name::*" << std::endl;
-	    $$ = Expr::makeStar();
-
-
-	    auto node = parser->ast()->createNodeObject();
-        parser->pushStack(node);
-
-        auto ast = parser->ast();
-        auto variable = ast->scopes()->getVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true);
-        if (variable != nullptr) {
-            // create a reference to the variable
-            auto node = ast->createNodeReference(variable);
-            parser->pushObjectElement(TRI_CHAR_LENGTH_PAIR("ROW"), node);
-        }
-	 }
+	|	'*' { $$ = Expr::makeStar(); }
 	|	IDENTIFIER '.' '*' { $$ = Expr::makeStar($1); }
 	;
 

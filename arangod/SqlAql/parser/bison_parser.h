@@ -57,6 +57,7 @@ extern int hsql_debug;
 #include "parser_typedef.h"
 #include "../../Aql/Parser.h"
 #include "../../Aql/AstNode.h"
+#include "../aql/SQLParseTreeToAQLAst.h"
 
 // Auto update column and line number
 #define YY_USER_ACTION \
@@ -74,7 +75,7 @@ extern int hsql_debug;
 				} \
 		}
 
-#line 78 "bison_parser.h" /* yacc.c:1910  */
+#line 79 "bison_parser.h" /* yacc.c:1910  */
 
 /* Token type.  */
 #ifndef HSQL_TOKENTYPE
@@ -267,7 +268,7 @@ union HSQL_STYPE
 	std::vector<hsql::Expr*>* expr_vec;
 	std::vector<hsql::OrderDescription*>* order_vec;
 
-#line 271 "bison_parser.h" /* yacc.c:1910  */
+#line 272 "bison_parser.h" /* yacc.c:1910  */
 };
 
 typedef union HSQL_STYPE HSQL_STYPE;

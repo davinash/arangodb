@@ -583,7 +583,9 @@ SET(ARANGOD_SOURCES
   SqlAql/SQLParserResult.h
   SqlAql/aql/SQLStatementToAQL.cpp
   SqlAql/aql/SQLStatementToAQL.h
-        ${ADDITIONAL_BIN_ARANGOD_SOURCES}
+  SqlAql/aql/SQLParseTreeToAQLAst.h
+  SqlAql/aql/SQLParseTreeToAQLAst.cpp
+  ${ADDITIONAL_BIN_ARANGOD_SOURCES}
 )
 
 if (USE_MAINTAINER_MODE)
