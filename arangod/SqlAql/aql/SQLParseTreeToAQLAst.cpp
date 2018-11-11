@@ -15,19 +15,20 @@ namespace hsql {
         std::cout << "SQLParseTreeToAQLAst::generateAQLAST" << std::endl;
 
         auto ast = _parser->ast();
+
         arangodb::aql::AstNode *nodeDataSource = nullptr;
         auto const &resolver = _parser->query()->resolver();
         nodeDataSource = ast->createNodeDataSource(resolver, TRI_CHAR_LENGTH_PAIR(_statement->fromTable->getName()),
                                                    arangodb::AccessMode::Type::READ, true, false);
 
-        _parser->ast()->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
+        ast->scopes()->start(arangodb::aql::AQL_SCOPE_FOR);
 
-        arangodb::aql::AstNode *variableNode = _parser->ast()->createNodeVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true);
+        arangodb::aql::AstNode *variableNode = ast->createNodeVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true);
         arangodb::aql::Variable *variable = static_cast<arangodb::aql::Variable *>(variableNode->getData());
 
-        _parser->ast()->addOperation(_parser->ast()->createNodeFor(variable, nodeDataSource, nullptr));
+        ast->addOperation(ast->createNodeFor(variable, nodeDataSource, nullptr));
 
-        auto nodeObject = _parser->ast()->createNodeObject();
+        auto nodeObject = ast->createNodeObject();
         _parser->pushStack(nodeObject);
 
         auto variableR = ast->scopes()->getVariable(TRI_CHAR_LENGTH_PAIR("ROW"), true);
@@ -40,9 +41,9 @@ namespace hsql {
 
         auto nodeRef1 = static_cast<arangodb::aql::AstNode *>(_parser->popStack());
 
-        auto nodeR2 = _parser->ast()->createNodeReturn(nodeRef1);
-        _parser->ast()->addOperation(nodeR2);
-        _parser->ast()->scopes()->endNested();
+        auto nodeR2 = ast->createNodeReturn(nodeRef1);
+        ast->addOperation(nodeR2);
+        ast->scopes()->endNested();
 
     }
 }
