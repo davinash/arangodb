@@ -12,14 +12,14 @@ namespace hsql {
     class SQLParseTreeToAQLAst {
     public:
         SQLParseTreeToAQLAst(SQLParser* parser, SelectStatement* statement);
-        void generateAQLAST();
+        void generateAqlAstForSelectStatement();
     private:
         SQLParser* _parser;
         SelectStatement* _statement;
 
-        void createDataSourceNode();
+        arangodb::aql::AstNode * createNodeFromVariable(const char* variableName);
         void createReturnNode();
-        void createReturnNode(const Expr *expr, arangodb::aql::AstNode* node);
+        arangodb::aql::AstNode* createReturnNodeInternal();
         void createReturnNodeForStar();
         void createReturnNodeForColumn(const char *columnName, arangodb::aql::AstNode* node);
     };

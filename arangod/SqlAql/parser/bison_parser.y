@@ -580,7 +580,7 @@ select_statement:
 	        $$ = $1;
 	        std::cout << "SQL::Grammar::select_statement::1" << std::endl;
             SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, $$);
-            pConverter->generateAQLAST();
+            pConverter->generateAqlAstForSelectStatement();
 
 	}
 	|	select_with_paren set_operator select_paren_or_clause opt_order opt_limit {
@@ -595,7 +595,7 @@ select_statement:
 			}
 			std::cout << "SQL::Grammar::select_statement::2" << std::endl;
 			SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, $$);
-            pConverter->generateAQLAST();
+            pConverter->generateAqlAstForSelectStatement();
 		}
 	;
 

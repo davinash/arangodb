@@ -20,7 +20,7 @@
 // dynamically memory allocation by Bison, but make it use alloca.
 #define YYSTACK_USE_ALLOCA 1
 
-#undef DEBUG_BUILD_AQL
+#define DEBUG_BUILD_AQL
 
 #ifdef DEBUG_BUILD_AQL
 #define DEBUG_AQL_GRAMMAR(x) do { std::cout << x << std::endl; } while (0)
@@ -525,7 +525,7 @@ for_statement:
       }
       DEBUG_AQL_GRAMMAR ( "AQL::for_statement::5" );
       parser->ast()->addOperation(node);
-      DEBUG_AQL_GRAMMAR ( "AQL::for_statement::6" );
+      DEBUG_AQL_GRAMMAR ( "AQL::for_statement::6 Moving to Return Statement Parsing " );
     }
   | T_FOR traversal_statement {
     }
@@ -1863,5 +1863,6 @@ object_element_name:
 variable_name:
     T_STRING {
       $$ = $1;
+      DEBUG_AQL_GRAMMAR("AQL::variable_name = " );
     }
   ;

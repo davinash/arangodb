@@ -3089,7 +3089,7 @@ yyreduce:
 	        (yyval.select_stmt) = (yyvsp[0].select_stmt);
 	        std::cout << "SQL::Grammar::select_statement::1" << std::endl;
             SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, (yyval.select_stmt));
-            pConverter->generateAQLAST();
+            pConverter->generateAqlAstForSelectStatement();
 
 	}
 #line 3096 "bison_parser.cpp" /* yacc.c:1648  */
@@ -3109,7 +3109,7 @@ yyreduce:
 			}
 			std::cout << "SQL::Grammar::select_statement::2" << std::endl;
 			SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, (yyval.select_stmt));
-            pConverter->generateAQLAST();
+            pConverter->generateAqlAstForSelectStatement();
 		}
 #line 3115 "bison_parser.cpp" /* yacc.c:1648  */
     break;
