@@ -578,6 +578,7 @@ select_statement:
 		select_with_paren
 	|	select_no_paren {
 	        $$ = $1;
+	        std::cout << "SQL::Grammar::select_statement::1" << std::endl;
             SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, $$);
             pConverter->generateAQLAST();
 
@@ -592,6 +593,9 @@ select_statement:
 				delete $$->limit;
 				$$->limit = $5;
 			}
+			std::cout << "SQL::Grammar::select_statement::2" << std::endl;
+			SQLParseTreeToAQLAst *pConverter = new SQLParseTreeToAQLAst(parser, $$);
+            pConverter->generateAQLAST();
 		}
 	;
 

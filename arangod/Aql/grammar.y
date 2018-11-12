@@ -20,7 +20,7 @@
 // dynamically memory allocation by Bison, but make it use alloca.
 #define YYSTACK_USE_ALLOCA 1
 
-#define DEBUG_BUILD_AQL 0
+#undef DEBUG_BUILD_AQL
 
 #ifdef DEBUG_BUILD_AQL
 #define DEBUG_AQL_GRAMMAR(x) do { std::cout << x << std::endl; } while (0)
@@ -414,13 +414,13 @@ queryStart:
 
 query:
     optional_statement_block_statements final_statement {
-        std::cout << "AQL::final_statement::final_statement::DONE" << std::endl;
+        DEBUG_AQL_GRAMMAR ("AQL::final_statement::final_statement::DONE");
     }
   ;
 
 final_statement:
     return_statement {
-        std::cout << "AQL::final_statement::return_statement::DONE" << std::endl;
+        DEBUG_AQL_GRAMMAR ("AQL::final_statement::return_statement::DONE");
     }
   | remove_statement {
       parser->ast()->scopes()->endNested();
@@ -935,7 +935,7 @@ limit_statement:
 
 return_statement:
     T_RETURN distinct_expression {
-      DEBUG_AQL_GRAMMAR ( "AQL::return_statement:: " << $2 );
+      std::cout << "AQL::return_statement:: " << $2 << std::endl;
       auto node = parser->ast()->createNodeReturn($2);
       parser->ast()->addOperation(node);
       parser->ast()->scopes()->endNested();
@@ -1328,11 +1328,11 @@ function_arguments_list:
 
 compound_value:
     array {
-      std::cout << "AQL::compound_value::array" << std::endl;
+      DEBUG_AQL_GRAMMAR ( "AQL::compound_value::array");
       $$ = $1;
     }
   | object {
-      std::cout << "AQL::compound_value::object" << std::endl;
+      DEBUG_AQL_GRAMMAR ("AQL::compound_value::object");
       $$ = $1;
     }
   ;
@@ -1437,7 +1437,7 @@ object:
       auto node = parser->ast()->createNodeObject();
       parser->pushStack(node);
     } optional_object_elements T_OBJECT_CLOSE {
-      std::cout << "AQL::object::T_OBJECT_CLOSE" << std::endl;
+      std::cout <<  "AQL::object::T_OBJECT_CLOSE" << std::endl;
       $$ = static_cast<AstNode*>(parser->popStack());
     }
   ;
@@ -1451,7 +1451,7 @@ optional_object_elements:
 
 object_elements_list:
     object_element {
-        std::cout << "AQL::object::object_element::DONE" << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::object::object_element::DONE" );
     }
   | object_elements_list T_COMMA object_element {
     }
@@ -1465,7 +1465,7 @@ object_element:
       auto variable = ast->scopes()->getVariable($1.value, $1.length, true);
 
       if (variable == nullptr) {
-        std::cout << "AQL::object::object_element::T_STRING::2" << std::endl;
+        DEBUG_AQL_GRAMMAR ( "AQL::object::object_element::T_STRING::2" );
         // variable does not exist
         parser->registerParseError(TRI_ERROR_QUERY_VARIABLE_NAME_UNKNOWN, "use of unknown variable '%s' in object literal", $1.value, yylloc.first_line, yylloc.first_column);
       }
@@ -1477,7 +1477,7 @@ object_element:
     }
   | object_element_name T_COLON expression {
       // attribute-name : attribute-value
-      std::cout << "AQL::object::object_element::T_STRING::4" << std::endl;
+      std::cout <<  "AQL::object::object_element::T_STRING::4::" << $1.value << "   " << $3 << std::endl;
       parser->pushObjectElement($1.value, $1.length, $3);
     }
   | T_PARAMETER T_COLON expression {
